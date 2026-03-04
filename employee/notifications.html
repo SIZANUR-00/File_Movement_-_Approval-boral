@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Notifications | File Movement & Approval System</title>
+
+  <!-- Fonts & Icons -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+  <script src="https://kit.fontawesome.com/a2e0f1e6b1.js" crossorigin="anonymous"></script>
+
+  <style>
+    :root {
+      --accent:#282424;
+      --accent-2:#3f8fd5;
+      --muted:#243557;
+      --gold:#ffce00;
+      --green:#3cdd77bd;
+      --red:#e74c3c;
+      --container-width:1200px;
+    }
+
+    *{box-sizing:border-box;margin:0;padding:0;font-family:'Poppins',sans-serif}
+    body{
+      background:#f6f7fb;
+      color:#0b1720;
+      overflow-x:hidden;
+      min-height:100vh;
+    }
+
+    /* ---------- HEADER ---------- */
+    header.topbar{
+      position:fixed;top:0;left:0;right:0;z-index:60;
+      display:flex;justify-content:center;pointer-events:none;
+    }
+    header .bar{
+      pointer-events:auto;
+      width:100%;max-width:var(--container-width);
+      display:flex;align-items:center;justify-content:space-between;
+      gap:16px;padding:18px 24px;margin:16px;
+      background:linear-gradient(180deg,rgba(255,255,255,0.08),rgba(255,255,255,0.02));
+      border-radius:12px;
+      backdrop-filter:blur(10px) saturate(120%);
+      box-shadow:0 6px 24px rgba(6,12,34,0.12);
+    }
+
+    .brand{display:flex;align-items:center;gap:12px}
+    .brand .logo{
+      width:44px;height:44px;border-radius:8px;
+      overflow:hidden;background:linear-gradient(135deg,var(--accent),var(--accent-2));
+      display:flex;align-items:center;justify-content:center;
+    }
+    .brand .logo img{width:100%;height:100%;object-fit:contain}
+    .brand h1{color:#b29315;font-size:1.1rem;font-weight:600;text-shadow:0 2px 8px rgba(62, 8, 8, 0.35)}
+
+    nav.topnav{display:flex;align-items:center;gap:14px}
+    nav.topnav a{
+      color:#bf3737;text-decoration:none;font-weight:600;
+      padding:8px 14px;border-radius:8px;transition:0.25s;
+    }
+    nav.topnav a:hover{background:rgba(255,255,255,0.15);transform:translateY(-2px)}
+
+    .user-info{
+      display:flex;align-items:center;gap:20px;color:#129922;font-weight:900;
+    }
+    .user-info i{font-size:20px}
+    .logout-btn{
+      background:var(--gold);color:#000;border:none;
+      padding:8px 14px;border-radius:8px;cursor:pointer;
+      font-weight:600;display:flex;align-items:center;gap:6px;
+      box-shadow:0 6px 18px rgba(255,206,0,0.25);
+      transition:0.2s;
+    }
+    .logout-btn:hover{background:#ffd633;transform:translateY(-2px)}
+
+    /* ---------- HERO SLIDES ---------- */
+    .hero{
+      position:relative;
+      height:40vh;
+      min-height:300px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      text-align:center;
+      overflow:hidden;
+      margin-top:100px;
+    }
+    .slides{
+      position:absolute;inset:0;z-index:0;
+    }
+    .slide{
+      position:absolute;inset:0;
+      background-size:cover;background-position:center;
+      opacity:0;transform:scale(1.03);
+      transition:opacity 1.2s ease, transform 8s ease;
+    }
+    .slide.active{opacity:1;transform:scale(1)}
+    .hero::after{
+      content:"";
+      position:absolute;inset:0;z-index:1;
+      background:linear-gradient(180deg,rgba(2,6,23,0.45),rgba(2,6,23,0.6));
+    }
+    .hero-inner{
+      position:relative;z-index:2;
+      color:#fff;
+      text-align:center;
+      padding:20px;
+    }
+    .hero-inner h2{
+      font-size:2.2rem;
+      color:#ffce00;
+      margin-bottom:10px;
+      text-shadow: 0 2px 10px rgba(0,0,0,0.5);
+    }
+    .hero-inner p{
+      font-size:1.05rem;
+      color:#d9f0ff;
+      font-weight:500;
+      text-shadow: 0 1px 5px rgba(0,0,0,0.4);
+    }
+
+    /* ---------- MAIN CONTENT ---------- */
+    main{
+      max-width:var(--container-width);
+      margin:0 auto;
+      padding:40px 24px 60px;
+    }
+
+    .content-box{
+      background:#fff;
+      border-radius:14px;
+      padding:28px 30px;
+      box-shadow:0 10px 40px rgba(0,0,0,0.05);
+      margin-top:40px;
+    }
+
+    .content-box h1{
+      color:var(--accent-2);
+      font-size:1.8rem;
+      margin-bottom:20px;
+      text-align:center;
+    }
+
+    /* Notification Styles */
+    .notification-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+      gap: 15px;
+    }
+    
+    .notification-actions {
+      display: flex;
+      gap: 10px;
+    }
+    
+    .action-btn {
+      background: var(--accent-2);
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: 0.2s;
+    }
+    
+    .action-btn:hover {
+      background: #1e6fb0;
+      transform: translateY(-2px);
+    }
+    
+    .action-btn.secondary {
+      background: #e2e8f0;
+      color: var(--muted);
+    }
+    
+    .action-btn.secondary:hover {
+      background: #cbd5e0;
+    }
+    
+    .notification-item {
+      display: flex;
+      gap: 15px;
+      padding: 20px;
+      border-bottom: 1px solid #e2e8f0;
+      transition: background 0.2s ease;
+    }
+    
+    .notification-item:hover {
+      background: #f8fafc;
+    }
+    
+    .notification-item.unread {
+      background: #f0f9ff;
+      border-left: 4px solid var(--accent-2);
+    }
+    
+    .notification-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: var(--accent-2);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    
+    .notification-icon.success {
+      background: var(--green);
+    }
+    
+    .notification-icon.warning {
+      background: var(--gold);
+    }
+    
+    .notification-icon.error {
+      background: var(--red);
+    }
+    
+    .notification-content {
+      flex: 1;
+    }
+    
+    .notification-title {
+      font-weight: 600;
+      color: var(--accent-2);
+      margin-bottom: 5px;
+    }
+    
+    .notification-message {
+      color: var(--muted);
+      margin-bottom: 8px;
+      line-height: 1.5;
+    }
+    
+    .notification-meta {
+      display: flex;
+      gap: 15px;
+      font-size: 0.85rem;
+      color: #94a3b8;
+    }
+    
+    .notification-app-id {
+      font-weight: 600;
+      color: var(--accent-2);
+    }
+    
+    .notification-time {
+      color: #94a3b8;
+    }
+    
+    .empty-state {
+      text-align: center;
+      padding: 40px;
+      color: var(--muted);
+    }
+    
+    .empty-state i {
+      font-size: 48px;
+      margin-bottom: 16px;
+      color: #cbd5e0;
+    }
+
+    /* Filter Section */
+    .filter-section {
+      display: flex;
+      gap: 15px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+    
+    .filter-select {
+      padding: 10px 15px;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      background: white;
+      font-family: 'Poppins', sans-serif;
+    }
+
+    /* ---------- FOOTER ---------- */
+    footer{
+      text-align:center;
+      color:var(--muted);
+      margin-top:60px;
+      padding:20px;
+      font-size:14px;
+    }
+
+    @media (max-width:768px){
+      .brand h1{font-size:1rem}
+      .hero-inner h2{font-size:1.8rem}
+      .notification-header {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      .notification-actions {
+        width: 100%;
+        justify-content: space-between;
+      }
+      .filter-section {
+        flex-direction: column;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <!-- HEADER -->
+  <header class="topbar">
+    <div class="bar">
+      <div class="brand">
+        <div class="logo" title="BAUET">
+          <img src="/image/bauet-logo2.png" alt="BAUET Logo" style="width:100%; height:100%; object-fit:contain;">
+        </div>
+        <div style="line-height:1;">
+          <h1>File Movement & Approval</h1>
+          <small>Online Approval System</small>
+        </div>
+      </div>
+
+      <nav class="topnav">
+        <a href="e_dashboard.html"><i class="fas fa-home"></i> Dashboard</a>
+        <a href="apply.html"><i class="fas fa-paper-plane"></i> Apply</a>
+        <a href="my_applications.html"><i class="fas fa-folder-open"></i> My Files</a>
+        <a href="status.html"><i class="fas fa-search"></i> Tracking</a>
+        <a href="notifications.html" style="background:rgba(255,255,255,0.15);"><i class="fas fa-bell"></i> Notifications</a>
+      </nav>
+
+      <div class="user-info">
+        <i class="fas fa-user-circle"></i>
+        <span>Sizanur</span>
+        <button class="logout-btn" onclick="window.location.href='/File_Movement_-_Approval/index.html'">
+          <i class="fas fa-sign-out-alt"></i> Logout
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- HERO SECTION -->
+  <section class="hero" id="hero">
+    <div class="slides" id="slides">
+      <div class="slide active" style="background-image:url('/image/BAUET-Campus.jpg')"></div>
+      <div class="slide" style="background-image:url('/image/bauet.jpeg')"></div>
+      <div class="slide" style="background-image:url('/image/boral_back.jpeg')"></div>
+      <div class="slide" style="background-image:url('/image/acc_buli.jpeg')"></div>
+    </div>
+    <div class="hero-inner">
+      <h2>Notifications</h2>
+      <p>Stay updated with your application progress</p>
+    </div>
+  </section>
+
+  <!-- MAIN CONTENT -->
+  <main>
+    <div class="content-box">
+      <h1>Your Notifications</h1>
+      
+      <!-- Notification Header -->
+      <div class="notification-header">
+        <div class="notification-stats">
+          <span id="unreadCount">3 unread</span> notifications
+        </div>
+        <div class="notification-actions">
+          <button class="action-btn secondary" onclick="markAllAsRead()">
+            <i class="fas fa-check-double"></i> Mark All as Read
+          </button>
+          <button class="action-btn secondary" onclick="clearAllNotifications()">
+            <i class="fas fa-trash"></i> Clear All
+          </button>
+        </div>
+      </div>
+
+      <!-- Filter Section -->
+      <div class="filter-section">
+        <select class="filter-select" id="typeFilter">
+          <option value="">All Types</option>
+          <option value="approval">Approval Updates</option>
+          <option value="status">Status Changes</option>
+          <option value="reminder">Reminders</option>
+          <option value="system">System Notifications</option>
+        </select>
+        
+        <select class="filter-select" id="dateFilter">
+          <option value="">All Time</option>
+          <option value="today">Today</option>
+          <option value="week">This Week</option>
+          <option value="month">This Month</option>
+        </select>
+      </div>
+
+      <!-- Notifications List -->
+      <div id="notificationsList">
+        <div class="notification-item unread">
+          <div class="notification-icon success">
+            <i class="fas fa-check"></i>
+          </div>
+          <div class="notification-content">
+            <div class="notification-title">Application Approved by House Tutor</div>
+            <div class="notification-message">
+              Your application "Room Change Request" has been approved by Dr. Mohammad Ali and forwarded to Assistant Provost.
+            </div>
+            <div class="notification-meta">
+              <span class="notification-app-id">APP-2024-001</span>
+              <span class="notification-time">2 hours ago</span>
+            </div>
+          </div>
+        </div>
+        
+        <div class="notification-item unread">
+          <div class="notification-icon">
+            <i class="fas fa-forward"></i>
+          </div>
+          <div class="notification-content">
+            <div class="notification-title">Application Forwarded</div>
+            <div class="notification-message">
+              Your leave application has been forwarded to Provost for final approval.
+            </div>
+            <div class="notification-meta">
+              <span class="notification-app-id">APP-2024-002</span>
+              <span class="notification-time">5 hours ago</span>
+            </div>
+          </div>
+        </div>
+        
+        <div class="notification-item unread">
+          <div class="notification-icon warning">
+            <i class="fas fa-exclamation-triangle"></i>
+          </div>
+          <div class="notification-content">
+            <div class="notification-title">Additional Information Required</div>
+            <div class="notification-message">
+              The Treasurer requires additional documents for your financial aid request. Please upload the required files.
+            </div>
+            <div class="notification-meta">
+              <span class="notification-app-id">APP-2024-004</span>
+              <span class="notification-time">1 day ago</span>
+            </div>
+          </div>
+        </div>
+        
+        <div class="notification-item">
+          <div class="notification-icon">
+            <i class="fas fa-bell"></i>
+          </div>
+          <div class="notification-content">
+            <div class="notification-title">New Comment Added</div>
+            <div class="notification-message">
+              Assistant Provost added a comment to your event permission application.
+            </div>
+            <div class="notification-meta">
+              <span class="notification-app-id">APP-2024-003</span>
+              <span class="notification-time">2 days ago</span>
+            </div>
+          </div>
+        </div>
+        
+        <div class="notification-item">
+          <div class="notification-icon success">
+            <i class="fas fa-check-circle"></i>
+          </div>
+          <div class="notification-content">
+            <div class="notification-title">Application Fully Approved</div>
+            <div class="notification-message">
+              Congratulations! Your event permission application has been fully approved by all authorities.
+            </div>
+            <div class="notification-meta">
+              <span class="notification-app-id">APP-2024-005</span>
+              <span class="notification-time">3 days ago</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Empty State -->
+      <div class="empty-state" id="emptyState" style="display: none;">
+        <i class="fas fa-bell-slash"></i>
+        <h3>No Notifications</h3>
+        <p>You're all caught up! There are no new notifications.</p>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    &copy; 2025 File Movement & Approval System — Developed by THUNDER-BOND
+  </footer>
+
+  <script>
+    // Slideshow transition
+    const slides = document.querySelectorAll('.slide');
+    let idx = 0;
+    setInterval(() => {
+      slides[idx].classList.remove('active');
+      idx = (idx + 1) % slides.length;
+      slides[idx].classList.add('active');
+    }, 5000);
+
+    // Notification functionality
+    function markAllAsRead() {
+      const unreadItems = document.querySelectorAll('.notification-item.unread');
+      unreadItems.forEach(item => {
+        item.classList.remove('unread');
+      });
+      updateUnreadCount();
+      alert('All notifications marked as read.');
+    }
+
+    function clearAllNotifications() {
+      if (confirm('Are you sure you want to clear all notifications?')) {
+        document.getElementById('notificationsList').innerHTML = '';
+        document.getElementById('emptyState').style.display = 'block';
+        updateUnreadCount();
+      }
+    }
+
+    function updateUnreadCount() {
+      const unreadCount = document.querySelectorAll('.notification-item.unread').length;
+      document.getElementById('unreadCount').textContent = `${unreadCount} unread`;
+    }
+
+    // Filter functionality
+    document.getElementById('typeFilter').addEventListener('change', filterNotifications);
+    document.getElementById('dateFilter').addEventListener('change', filterNotifications);
+
+    function filterNotifications() {
+      const typeFilter = document.getElementById('typeFilter').value;
+      const dateFilter = document.getElementById('dateFilter').value;
+      const notifications = document.querySelectorAll('.notification-item');
+      
+      let visibleCount = 0;
+      
+      notifications.forEach(notification => {
+        // In a real app, you would check actual notification types and dates
+        // For this demo, we'll just show a simple filter effect
+        let shouldShow = true;
+        
+        if (typeFilter && !notification.querySelector('.notification-title').textContent.toLowerCase().includes(typeFilter)) {
+          shouldShow = false;
+        }
+        
+        if (shouldShow) {
+          notification.style.display = 'flex';
+          visibleCount++;
+        } else {
+          notification.style.display = 'none';
+        }
+      });
+      
+      // Show empty state if no notifications match filters
+      const emptyState = document.getElementById('emptyState');
+      emptyState.style.display = visibleCount === 0 ? 'block' : 'none';
+    }
+
+    // Initialize unread count
+    updateUnreadCount();
+  </script>
+</body>
+</html>

@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Apply Application | File Movement & Approval System</title>
+
+  <!-- Fonts & Icons -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+  <script src="https://kit.fontawesome.com/a2e0f1e6b1.js" crossorigin="anonymous"></script>
+
+  <style>
+    :root {
+      --accent:#282424;
+      --accent-2:#3f8fd5;
+      --muted:#243557;
+      --gold:#ffce00;
+      --green:#3cdd77bd;
+      --container-width:1200px;
+    }
+
+    *{box-sizing:border-box;margin:0;padding:0;font-family:'Poppins',sans-serif}
+    body{
+      background:#f6f7fb;
+      color:#0b1720;
+      overflow-x:hidden;
+      min-height:100vh;
+    }
+
+    /* ---------- HEADER ---------- */
+    header.topbar{
+      position:fixed;top:0;left:0;right:0;z-index:60;
+      display:flex;justify-content:center;pointer-events:none;
+    }
+    header .bar{
+      pointer-events:auto;
+      width:100%;max-width:var(--container-width);
+      display:flex;align-items:center;justify-content:space-between;
+      gap:16px;padding:18px 24px;margin:16px;
+      background:linear-gradient(180deg,rgba(255,255,255,0.08),rgba(255,255,255,0.02));
+      border-radius:12px;
+      backdrop-filter:blur(10px) saturate(120%);
+      box-shadow:0 6px 24px rgba(6,12,34,0.12);
+    }
+
+    .brand{display:flex;align-items:center;gap:12px}
+    .brand .logo{
+      width:44px;height:44px;border-radius:8px;
+      overflow:hidden;background:linear-gradient(135deg,var(--accent),var(--accent-2));
+      display:flex;align-items:center;justify-content:center;
+    }
+    .brand .logo img{width:100%;height:100%;object-fit:contain}
+    .brand h1{color:#b29315;font-size:1.1rem;font-weight:600;text-shadow:0 2px 8px rgba(62, 8, 8, 0.35)}
+
+    nav.topnav{display:flex;align-items:center;gap:14px}
+    nav.topnav a{
+      color:#bf3737;text-decoration:none;font-weight:600;
+      padding:8px 14px;border-radius:8px;transition:0.25s;
+    }
+    nav.topnav a:hover{background:rgba(255,255,255,0.15);transform:translateY(-2px)}
+
+    .user-info{
+      display:flex;align-items:center;gap:20px;color:#129922;font-weight:900;
+    }
+    .user-info i{font-size:20px}
+    .logout-btn{
+      background:var(--gold);color:#000;border:none;
+      padding:8px 14px;border-radius:8px;cursor:pointer;
+      font-weight:600;display:flex;align-items:center;gap:6px;
+      box-shadow:0 6px 18px rgba(255,206,0,0.25);
+      transition:0.2s;
+    }
+    .logout-btn:hover{background:#ffd633;transform:translateY(-2px)}
+
+    /* ---------- HERO SLIDES ---------- */
+    .hero{
+      position:relative;
+      height:40vh;
+      min-height:300px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      text-align:center;
+      overflow:hidden;
+      margin-top:100px;
+    }
+    .slides{
+      position:absolute;inset:0;z-index:0;
+    }
+    .slide{
+      position:absolute;inset:0;
+      background-size:cover;background-position:center;
+      opacity:0;transform:scale(1.03);
+      transition:opacity 1.2s ease, transform 8s ease;
+    }
+    .slide.active{opacity:1;transform:scale(1)}
+    .hero::after{
+      content:"";
+      position:absolute;inset:0;z-index:1;
+      background:linear-gradient(180deg,rgba(2,6,23,0.45),rgba(2,6,23,0.6));
+    }
+    .hero-inner{
+      position:relative;z-index:2;
+      color:#fff;
+      text-align:center;
+      padding:20px;
+    }
+    .hero-inner h2{
+      font-size:2.2rem;
+      color:#ffce00;
+      margin-bottom:10px;
+      text-shadow: 0 2px 10px rgba(0,0,0,0.5);
+    }
+    .hero-inner p{
+      font-size:1.05rem;
+      color:#d9f0ff;
+      font-weight:500;
+      text-shadow: 0 1px 5px rgba(0,0,0,0.4);
+    }
+
+    /* ---------- MAIN CONTENT ---------- */
+    main{
+      max-width:var(--container-width);
+      margin:0 auto;
+      padding:40px 24px 60px;
+    }
+
+    .content-box{
+      background:#fff;
+      border-radius:14px;
+      padding:28px 30px;
+      box-shadow:0 10px 40px rgba(0,0,0,0.05);
+      margin-top:40px;
+    }
+
+    .content-box h1{
+      color:var(--accent-2);
+      font-size:1.8rem;
+      margin-bottom:20px;
+      text-align:center;
+    }
+
+    form{
+      display:flex;
+      flex-direction:column;
+      gap:20px;
+    }
+
+    .form-group{
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+    }
+
+    .form-group label{
+      font-weight:600;
+      color:var(--accent-2);
+      font-size:1rem;
+    }
+
+    .form-group input, .form-group textarea, .form-group select{
+      padding:12px 16px;
+      border:1px solid rgba(11,23,32,0.15);
+      border-radius:8px;
+      font-family:'Poppins',sans-serif;
+      font-size:15px;
+      transition:border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .form-group input:focus, .form-group textarea:focus, .form-group select:focus{
+      outline:none;
+      border-color:var(--accent-2);
+      box-shadow:0 0 0 3px rgba(63,143,213,0.1);
+    }
+
+    .role-wrapper{
+      display:flex;
+      align-items:center;
+      gap:12px;
+      margin-bottom:12px;
+    }
+
+    .role-wrapper select{
+      flex:1;
+    }
+
+    .remove-btn{
+      background:#e74c3c;
+      color:#fff;
+      border:none;
+      padding:8px 14px;
+      border-radius:6px;
+      cursor:pointer;
+      font-weight:600;
+      transition:0.2s;
+    }
+
+    .remove-btn:hover{
+      background:#c0392b;
+      transform:translateY(-2px);
+    }
+
+    .submit-btn{
+      background:var(--accent-2);
+      color:#fff;
+      border:none;
+      padding:14px 24px;
+      border-radius:8px;
+      cursor:pointer;
+      font-weight:600;
+      font-size:16px;
+      transition:0.2s;
+      margin-top:10px;
+      align-self:center;
+      width:200px;
+    }
+
+    .submit-btn:hover{
+      background:#1e6fb0;
+      transform:translateY(-2px);
+    }
+
+    /* Role Selection Styles */
+    .role-section {
+      margin-bottom: 25px;
+      padding: 20px;
+      background: #f8fafc;
+      border-radius: 10px;
+      border: 1px solid #e2e8f0;
+    }
+    
+    .role-title {
+      font-size: 1.2rem;
+      font-weight: 600;
+      color: var(--accent-2);
+      margin-bottom: 15px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .role-title i {
+      color: var(--accent-2);
+    }
+
+    /* House Tutor Selection */
+    .tutor-selection {
+      margin-top: 10px;
+      padding: 12px;
+      background: #fff;
+      border-radius: 6px;
+      border: 1px solid #e2e8f0;
+    }
+
+    /* Add Role Button */
+    .add-role-btn {
+      background: var(--green);
+      color: #000;
+      border: none;
+      padding: 10px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+      margin-top: 10px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s ease;
+    }
+    
+    .add-role-btn:hover {
+      background: #2ecc71;
+      transform: translateY(-2px);
+    }
+
+    /* ---------- FOOTER ---------- */
+    footer{
+      text-align:center;
+      color:var(--muted);
+      margin-top:60px;
+      padding:20px;
+      font-size:14px;
+    }
+
+    @media (max-width:768px){
+      .brand h1{font-size:1rem}
+      .hero-inner h2{font-size:1.8rem}
+      .role-wrapper{
+        flex-direction:column;
+        align-items:stretch;
+      }
+      .remove-btn{
+        align-self:flex-end;
+        width:120px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <!-- HEADER -->
+  <header class="topbar">
+    <div class="bar">
+      <div class="brand">
+        <div class="logo" title="BAUET">
+          <img src="/image/bauet-logo2.png" alt="BAUET Logo" style="width:100%; height:100%; object-fit:contain;">
+        </div>
+        <div style="line-height:1;">
+          <h1>File Movement & Approval</h1>
+          <small>Online Approval System</small>
+        </div>
+      </div>
+
+      <nav class="topnav">
+        <a href="e_dashboard.html"><i class="fas fa-home"></i> Dashboard</a>
+        <a href="apply.html" style="background:rgba(255,255,255,0.15);"><i class="fas fa-paper-plane"></i> Apply</a>
+        <a href="my_applications.html"><i class="fas fa-folder-open"></i> My Files</a>
+        <a href="status.html"><i class="fas fa-search"></i> Tracking</a>
+        <a href="notifications.html"><i class="fas fa-bell"></i> Notifications</a>
+      </nav>
+
+      <div class="user-info">
+        <i class="fas fa-user-circle"></i>
+        <span>Sizanur</span>
+        <button class="logout-btn" onclick="window.location.href='/File_Movement_-_Approval/index.html'">
+          <i class="fas fa-sign-out-alt"></i> Logout
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- HERO SECTION -->
+  <section class="hero" id="hero">
+    <div class="slides" id="slides">
+      <div class="slide active" style="background-image:url('/image/BAUET-Campus.jpg')"></div>
+      <div class="slide" style="background-image:url('/image/bauet.jpeg')"></div>
+      <div class="slide" style="background-image:url('/image/boral_back.jpeg')"></div>
+      <div class="slide" style="background-image:url('/image/acc_buli.jpeg')"></div>
+    </div>
+
+    <div class="hero-inner">
+      <h2>Apply for File Movement</h2>
+      <p>Submit your application and track its progress through departments</p>
+    </div>
+  </section>
+
+  <!-- MAIN CONTENT -->
+  <main>
+    <div class="content-box">
+      <h1>New Application Form</h1>
+      
+      <form id="applicationForm">
+        <div class="form-group">
+          <label for="applicationTitle">Application Title</label>
+          <input type="text" id="applicationTitle" placeholder="Enter application title" required>
+        </div>
+
+        <div class="form-group">
+          <label for="applicationDescription">Description</label>
+          <textarea id="applicationDescription" placeholder="Enter details about your application..." rows="4" required></textarea>
+        </div>
+
+        <div class="form-group">
+          <label for="fileUpload">Upload File</label>
+          <input type="file" id="fileUpload" required>
+        </div>
+
+        <!-- Role Selection Section -->
+        <div class="role-section">
+          <div class="role-title">
+            <i class="fas fa-user-tie"></i>
+            Select Approval Roles (Sequential Order)
+          </div>
+          
+          <!-- Roles Container -->
+          <div id="rolesContainer">
+            <div class="role-wrapper">
+              <select name="role[]" class="role-select" onchange="handleRoleChange(this, 1)" required>
+                <option value="">-- Select Role 1 --</option>
+                <option value="house-tutor">House Tutor</option>
+                <option value="assistant-provost">Assistant Provost</option>
+                <option value="provost">Provost</option>
+                <option value="treasurer">Treasurer</option>
+                <option value="vc">Vice Chancellor</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Add Next Role Button -->
+          <button type="button" class="add-role-btn" id="addRoleBtn" onclick="addNextRole()">
+            <i class="fas fa-plus"></i> Add Next Approval Role
+          </button>
+        </div>
+
+        <button type="submit" class="submit-btn">Submit Application</button>
+      </form>
+    </div>
+  </main>
+
+  <footer>
+    &copy; 2025 File Movement & Approval System — Developed by THUNDER-BOND
+  </footer>
+
+  <script>
+    // Slideshow transition
+    const slides = document.querySelectorAll('.slide');
+    let idx = 0;
+    setInterval(() => {
+      slides[idx].classList.remove('active');
+      idx = (idx + 1) % slides.length;
+      slides[idx].classList.add('active');
+    }, 5000);
+
+    // All available house tutors
+    const allHouseTutors = [
+      { value: 'tutor1', text: 'Md. Zihad ali' },
+      { value: 'tutor2', text: 'Prof. Akash ahmed' },
+      { value: 'tutor3', text: 'Dr. Abdullah Al Mamun' },
+      { value: 'tutor4', text: 'Prof. Nahin hossain' },
+      { value: 'tutor5', text: 'Dr. Rahim Uddin ' },
+      { value: 'tutor6', text: 'Prof. abdul halim' }
+    ];
+
+    let selectedHouseTutors = [];
+    let roleCounter = 1;
+
+    function handleRoleChange(selectElement, index) {
+      const roleType = selectElement.value;
+      
+      // Remove existing tutor selection for this role
+      const existingTutorSelection = selectElement.parentNode.querySelector('.tutor-selection');
+      if (existingTutorSelection) {
+        selectElement.parentNode.removeChild(existingTutorSelection);
+      }
+      
+      // Clear previous selection for this index
+      selectedHouseTutors[index - 1] = '';
+      
+      // If House Tutor is selected, show tutor selection
+      if (roleType === 'house-tutor') {
+        showTutorSelection(selectElement, index);
+      }
+    }
+
+    function showTutorSelection(selectElement, index) {
+      const roleWrapper = selectElement.parentNode;
+      
+      // Get available tutors (excluding already selected ones)
+      const availableTutors = allHouseTutors.filter(tutor => 
+        !selectedHouseTutors.includes(tutor.value)
+      );
+      
+      if (availableTutors.length === 0) {
+        alert('No more House Tutors available. All 6 have been selected.');
+        selectElement.value = '';
+        return;
+      }
+      
+      const tutorSelection = document.createElement('div');
+      tutorSelection.className = 'tutor-selection';
+      tutorSelection.innerHTML = `
+        <label style="font-weight: 600; color: var(--accent-2); margin-bottom: 8px; display: block;">
+          Select House Tutor:
+        </label>
+        <select class="tutor-select" onchange="updateHouseTutorSelection(this, ${index})" required>
+          <option value="">-- Choose House Tutor --</option>
+          ${availableTutors.map(tutor => 
+            `<option value="${tutor.value}">${tutor.text}</option>`
+          ).join('')}
+        </select>
+      `;
+      
+      roleWrapper.appendChild(tutorSelection);
+    }
+
+    function updateHouseTutorSelection(selectElement, index) {
+      selectedHouseTutors[index - 1] = selectElement.value;
+      
+      // Update all role selects to remove selected tutors from House Tutor options
+      updateAllRoleSelects();
+    }
+
+    function updateAllRoleSelects() {
+      const roleSelects = document.querySelectorAll('.role-select');
+      
+      roleSelects.forEach((select, index) => {
+        const currentValue = select.value;
+        const currentIndex = index + 1;
+        
+        // Clear and rebuild options
+        select.innerHTML = `
+          <option value="">-- Select Role ${currentIndex} --</option>
+          <option value="house-tutor" ${currentValue === 'house-tutor' ? 'selected' : ''}>House Tutor</option>
+          <option value="assistant-provost" ${currentValue === 'assistant-provost' ? 'selected' : ''}>Assistant Provost</option>
+          <option value="provost" ${currentValue === 'provost' ? 'selected' : ''}>Provost</option>
+          <option value="treasurer" ${currentValue === 'treasurer' ? 'selected' : ''}>Treasurer</option>
+          <option value="vc" ${currentValue === 'vc' ? 'selected' : ''}>Vice Chancellor</option>
+        `;
+        
+        // If this role was House Tutor and all tutors are taken, change it
+        if (currentValue === 'house-tutor') {
+          const availableTutors = allHouseTutors.filter(tutor => 
+            !selectedHouseTutors.includes(tutor.value) || selectedHouseTutors[currentIndex - 1] === tutor.value
+          );
+          
+          if (availableTutors.length === 0) {
+            select.value = '';
+            const tutorSelection = select.parentNode.querySelector('.tutor-selection');
+            if (tutorSelection) {
+              select.parentNode.removeChild(tutorSelection);
+            }
+            selectedHouseTutors[currentIndex - 1] = '';
+            alert(`Role ${currentIndex}: No House Tutors available. Please select a different role.`);
+          }
+        }
+        
+        // Reattach the change event
+        select.setAttribute('onchange', `handleRoleChange(this, ${currentIndex})`);
+      });
+    }
+
+    function addNextRole() {
+      roleCounter++;
+      const container = document.getElementById('rolesContainer');
+      
+      const roleWrapper = document.createElement('div');
+      roleWrapper.className = 'role-wrapper';
+      
+      roleWrapper.innerHTML = `
+        <select name="role[]" class="role-select" onchange="handleRoleChange(this, ${roleCounter})" required>
+          <option value="">-- Select Role ${roleCounter} --</option>
+          <option value="house-tutor">House Tutor</option>
+          <option value="assistant-provost">Assistant Provost</option>
+          <option value="provost">Provost</option>
+          <option value="treasurer">Treasurer</option>
+          <option value="vc">Vice Chancellor</option>
+        </select>
+        <button type="button" class="remove-btn" onclick="removeRole(this, ${roleCounter})">
+          Remove
+        </button>
+      `;
+      
+      container.appendChild(roleWrapper);
+      selectedHouseTutors[roleCounter - 1] = '';
+    }
+
+    function removeRole(button, index) {
+      const wrapper = button.closest('.role-wrapper');
+      const container = document.getElementById('rolesContainer');
+      container.removeChild(wrapper);
+      
+      // Remove from selected tutors array
+      selectedHouseTutors.splice(index - 1, 1);
+      roleCounter--;
+      
+      // Reindex remaining roles
+      const remainingWrappers = container.querySelectorAll('.role-wrapper');
+      remainingWrappers.forEach((wrapper, idx) => {
+        const newIndex = idx + 1;
+        const select = wrapper.querySelector('.role-select');
+        const tutorSelection = wrapper.querySelector('.tutor-selection');
+        
+        // Update select label
+        select.innerHTML = select.innerHTML.replace(/Role \d+/, `Role ${newIndex}`);
+        
+        // Update change event
+        select.setAttribute('onchange', `handleRoleChange(this, ${newIndex})`);
+        
+        // Update remove button
+        const removeBtn = wrapper.querySelector('.remove-btn');
+        if (removeBtn) {
+          removeBtn.setAttribute('onclick', `removeRole(this, ${newIndex})`);
+        }
+        
+        // Update tutor selection if exists
+        if (tutorSelection) {
+          const tutorSelect = tutorSelection.querySelector('.tutor-select');
+          tutorSelect.setAttribute('onchange', `updateHouseTutorSelection(this, ${newIndex})`);
+        }
+      });
+      
+      // Update all role selects
+      updateAllRoleSelects();
+    }
+
+    // Form submission
+    document.getElementById('applicationForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      
+      // Validate all role selections
+      const roleSelects = document.querySelectorAll('.role-select');
+      let isValid = true;
+      
+      roleSelects.forEach((select, index) => {
+        if (!select.value) {
+          alert(`Please select a role for Role ${index + 1}.`);
+          isValid = false;
+          return;
+        }
+        
+        if (select.value === 'house-tutor') {
+          const tutorSelect = select.parentNode.querySelector('.tutor-select');
+          if (!tutorSelect || !tutorSelect.value) {
+            alert(`Please select a House Tutor for Role ${index + 1}.`);
+            isValid = false;
+            return;
+          }
+        }
+      });
+      
+      if (!isValid) return;
+      
+      alert('Application submitted successfully! You will be redirected to the dashboard.');
+      window.location.href = 'e_dashboard.html';
+    });
+  </script>
+  <script type="module" src="../js/apply.js"></script>
+</body>
+</html>

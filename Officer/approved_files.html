@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Approved Files</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+<style>
+body {
+  font-family: Arial, sans-serif;
+  background-color: #f4f6f8;
+  margin: 20px;
+  color: #333;
+}
+
+h2 {
+  text-align: center;
+  color: #27ae60;
+  margin-bottom: 30px;
+}
+
+.approved-list {
+  list-style: none;
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 0;
+}
+
+.approved-list li {
+  background-color: #e8f8f5;
+  margin-bottom: 15px;
+  padding: 15px 20px;
+  border-left: 5px solid #2ecc71;
+  border-radius: 5px;
+  font-size: 16px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+}
+
+</style>
+
+</head>
+<body>
+  <h2>✅ Approved Files</h2>
+  <ul class="approved-list">
+    {% for file in approved_files %}
+      <li>#{{ file.id }} - {{ file.title }} - Approved on {{ file.approved_date }}</li>
+    {% else %}
+      <li>No approved files yet.</li>
+    {% endfor %}
+  </ul>
+</body>
+</html>

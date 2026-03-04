@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Application Tracking | File Movement & Approval System</title>
+
+  <!-- Fonts & Icons -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+  <script src="https://kit.fontawesome.com/a2e0f1e6b1.js" crossorigin="anonymous"></script>
+
+  <style>
+    :root {
+      --accent:#282424;
+      --accent-2:#3f8fd5;
+      --muted:#243557;
+      --gold:#ffce00;
+      --green:#3cdd77bd;
+      --red:#e74c3c;
+      --container-width:1200px;
+    }
+
+    *{box-sizing:border-box;margin:0;padding:0;font-family:'Poppins',sans-serif}
+    body{
+      background:#f6f7fb;
+      color:#0b1720;
+      overflow-x:hidden;
+      min-height:100vh;
+    }
+
+    /* ---------- HEADER ---------- */
+    header.topbar{
+      position:fixed;top:0;left:0;right:0;z-index:60;
+      display:flex;justify-content:center;pointer-events:none;
+    }
+    header .bar{
+      pointer-events:auto;
+      width:100%;max-width:var(--container-width);
+      display:flex;align-items:center;justify-content:space-between;
+      gap:16px;padding:18px 24px;margin:16px;
+      background:linear-gradient(180deg,rgba(255,255,255,0.08),rgba(255,255,255,0.02));
+      border-radius:12px;
+      backdrop-filter:blur(10px) saturate(120%);
+      box-shadow:0 6px 24px rgba(6,12,34,0.12);
+    }
+
+    .brand{display:flex;align-items:center;gap:12px}
+    .brand .logo{
+      width:44px;height:44px;border-radius:8px;
+      overflow:hidden;background:linear-gradient(135deg,var(--accent),var(--accent-2));
+      display:flex;align-items:center;justify-content:center;
+    }
+    .brand .logo img{width:100%;height:100%;object-fit:contain}
+    .brand h1{color:#b29315;font-size:1.1rem;font-weight:600;text-shadow:0 2px 8px rgba(62, 8, 8, 0.35)}
+
+    nav.topnav{display:flex;align-items:center;gap:14px}
+    nav.topnav a{
+      color:#bf3737;text-decoration:none;font-weight:600;
+      padding:8px 14px;border-radius:8px;transition:0.25s;
+    }
+    nav.topnav a:hover{background:rgba(255,255,255,0.15);transform:translateY(-2px)}
+
+    .user-info{
+      display:flex;align-items:center;gap:20px;color:#129922;font-weight:900;
+    }
+    .user-info i{font-size:20px}
+    .logout-btn{
+      background:var(--gold);color:#000;border:none;
+      padding:8px 14px;border-radius:8px;cursor:pointer;
+      font-weight:600;display:flex;align-items:center;gap:6px;
+      box-shadow:0 6px 18px rgba(255,206,0,0.25);
+      transition:0.2s;
+    }
+    .logout-btn:hover{background:#ffd633;transform:translateY(-2px)}
+
+    /* ---------- HERO SLIDES ---------- */
+    .hero{
+      position:relative;
+      height:40vh;
+      min-height:300px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      text-align:center;
+      overflow:hidden;
+      margin-top:100px;
+    }
+    .slides{
+      position:absolute;inset:0;z-index:0;
+    }
+    .slide{
+      position:absolute;inset:0;
+      background-size:cover;background-position:center;
+      opacity:0;transform:scale(1.03);
+      transition:opacity 1.2s ease, transform 8s ease;
+    }
+    .slide.active{opacity:1;transform:scale(1)}
+    .hero::after{
+      content:"";
+      position:absolute;inset:0;z-index:1;
+      background:linear-gradient(180deg,rgba(2,6,23,0.45),rgba(2,6,23,0.6));
+    }
+    .hero-inner{
+      position:relative;z-index:2;
+      color:#fff;
+      text-align:center;
+      padding:20px;
+    }
+    .hero-inner h2{
+      font-size:2.2rem;
+      color:#ffce00;
+      margin-bottom:10px;
+      text-shadow: 0 2px 10px rgba(0,0,0,0.5);
+    }
+    .hero-inner p{
+      font-size:1.05rem;
+      color:#d9f0ff;
+      font-weight:500;
+      text-shadow: 0 1px 5px rgba(0,0,0,0.4);
+    }
+
+    /* ---------- MAIN CONTENT ---------- */
+    main{
+      max-width:var(--container-width);
+      margin:0 auto;
+      padding:40px 24px 60px;
+    }
+
+    .content-box{
+      background:#fff;
+      border-radius:14px;
+      padding:28px 30px;
+      box-shadow:0 10px 40px rgba(0,0,0,0.05);
+      margin-top:40px;
+    }
+
+    .content-box h1{
+      color:var(--accent-2);
+      font-size:1.8rem;
+      margin-bottom:20px;
+      text-align:center;
+    }
+
+    /* Search Section */
+    .search-section {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 30px;
+      flex-wrap: wrap;
+    }
+    
+    .search-input {
+      flex: 1;
+      padding: 12px 16px;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      font-family: 'Poppins', sans-serif;
+      min-width: 250px;
+    }
+    
+    .search-btn {
+      background: var(--accent-2);
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: 0.2s;
+    }
+    
+    .search-btn:hover {
+      background: #1e6fb0;
+      transform: translateY(-2px);
+    }
+
+    /* Tracking Timeline */
+    .tracking-timeline {
+      position: relative;
+      padding: 20px 0;
+    }
+    
+    .timeline-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 20px;
+      margin-bottom: 30px;
+      position: relative;
+    }
+    
+    .timeline-item:not(:last-child)::after {
+      content: '';
+      position: absolute;
+      left: 25px;
+      top: 40px;
+      bottom: -30px;
+      width: 2px;
+      background: #e2e8f0;
+    }
+    
+    .timeline-icon {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      background: var(--accent-2);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      z-index: 2;
+      flex-shrink: 0;
+    }
+    
+    .timeline-icon.completed {
+      background: var(--green);
+    }
+    
+    .timeline-icon.current {
+      background: var(--gold);
+    }
+    
+    .timeline-icon.pending {
+      background: #cbd5e0;
+    }
+    
+    .timeline-content {
+      flex: 1;
+      background: #f8fafc;
+      padding: 20px;
+      border-radius: 10px;
+      border-left: 4px solid var(--accent-2);
+    }
+    
+    .timeline-content.completed {
+      border-left-color: var(--green);
+    }
+    
+    .timeline-content.current {
+      border-left-color: var(--gold);
+    }
+    
+    .timeline-content.pending {
+      border-left-color: #cbd5e0;
+    }
+    
+    .timeline-role {
+      font-weight: 600;
+      color: var(--accent-2);
+      margin-bottom: 5px;
+    }
+    
+    .timeline-date {
+      font-size: 0.85rem;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+    
+    .timeline-comments {
+      font-size: 0.9rem;
+      color: var(--muted);
+      margin-top: 8px;
+      font-style: italic;
+    }
+
+    /* Application Info */
+    .application-info {
+      background: #f8fafc;
+      padding: 20px;
+      border-radius: 10px;
+      margin-bottom: 30px;
+    }
+    
+    .info-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+    }
+    
+    .info-item {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+    
+    .info-label {
+      font-weight: 600;
+      color: var(--accent-2);
+      font-size: 0.9rem;
+    }
+    
+    .info-value {
+      color: var(--muted);
+    }
+
+    /* ---------- FOOTER ---------- */
+    footer{
+      text-align:center;
+      color:var(--muted);
+      margin-top:60px;
+      padding:20px;
+      font-size:14px;
+    }
+
+    @media (max-width:768px){
+      .brand h1{font-size:1rem}
+      .hero-inner h2{font-size:1.8rem}
+      .search-section {
+        flex-direction: column;
+      }
+      .timeline-item {
+        flex-direction: column;
+        gap: 10px;
+      }
+      .timeline-item:not(:last-child)::after {
+        left: 25px;
+        top: 50px;
+        bottom: -20px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <!-- HEADER -->
+  <header class="topbar">
+    <div class="bar">
+      <div class="brand">
+        <div class="logo" title="BAUET">
+          <img src="/image/bauet-logo2.png" alt="BAUET Logo" style="width:100%; height:100%; object-fit:contain;">
+        </div>
+        <div style="line-height:1;">
+          <h1>File Movement & Approval</h1>
+          <small>Online Approval System</small>
+        </div>
+      </div>
+
+      <nav class="topnav">
+        <a href="e_dashboard.html"><i class="fas fa-home"></i> Dashboard</a>
+        <a href="apply.html"><i class="fas fa-paper-plane"></i> Apply</a>
+        <a href="my_applications.html"><i class="fas fa-folder-open"></i> My Files</a>
+        <a href="status.html" style="background:rgba(255,255,255,0.15);"><i class="fas fa-search"></i> Tracking</a>
+        <a href="notifications.html"><i class="fas fa-bell"></i> Notifications</a>
+      </nav>
+
+      <div class="user-info">
+        <i class="fas fa-user-circle"></i>
+        <span>Sizanur</span>
+        <button class="logout-btn" onclick="window.location.href='/File_Movement_-_Approval/index.html'">
+          <i class="fas fa-sign-out-alt"></i> Logout
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- HERO SECTION -->
+  <section class="hero" id="hero">
+    <div class="slides" id="slides">
+      <div class="slide active" style="background-image:url('/image/BAUET-Campus.jpg')"></div>
+      <div class="slide" style="background-image:url('/image/bauet.jpeg')"></div>
+      <div class="slide" style="background-image:url('/image/boral_back.jpeg')"></div>
+      <div class="slide" style="background-image:url('/image/acc_buli.jpeg')"></div>File_Movement_-_Approval/image/acc_buli.jpeg')"></div>
+    </div>
+
+    <div class="hero-inner">
+      <h2>Application Tracking</h2>
+      <p>Track the real-time status of your applications</p>
+    </div>
+  </section>
+
+  <!-- MAIN CONTENT -->
+  <main>
+    <div class="content-box">
+      <h1>Track Application Status</h1>
+      
+      <!-- Search Section -->
+      <div class="search-section">
+        <input type="text" class="search-input" id="searchInput" placeholder="Enter Application ID (e.g., APP-2024-001)">
+        <button class="search-btn" onclick="searchApplication()">
+          <i class="fas fa-search"></i> Track Application
+        </button>
+      </div>
+
+      <!-- Application Info -->
+      <div class="application-info" id="applicationInfo" style="display: none;">
+        <h3 style="color: var(--accent-2); margin-bottom: 15px;">Application Details</h3>
+        <div class="info-grid">
+          <div class="info-item">
+            <span class="info-label">Application ID</span>
+            <span class="info-value" id="infoId">-</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Title</span>
+            <span class="info-value" id="infoTitle">-</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Submitted Date</span>
+            <span class="info-value" id="infoDate">-</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Current Status</span>
+            <span class="info-value" id="infoStatus">-</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tracking Timeline -->
+      <div class="tracking-timeline" id="trackingTimeline" style="display: none;">
+        <h3 style="color: var(--accent-2); margin-bottom: 20px;">Approval Progress</h3>
+        
+        <div class="timeline-item">
+          <div class="timeline-icon completed">
+            <i class="fas fa-check"></i>
+          </div>
+          <div class="timeline-content completed">
+            <div class="timeline-role">House Tutor - Dr. Mohammad Ali</div>
+            <div class="timeline-date">Approved on: 2024-01-16 10:30 AM</div>
+            <div class="timeline-comments">"Application reviewed and forwarded to next level"</div>
+          </div>
+        </div>
+        
+        <div class="timeline-item">
+          <div class="timeline-icon current">
+            <i class="fas fa-clock"></i>
+          </div>
+          <div class="timeline-content current">
+            <div class="timeline-role">Assistant Provost</div>
+            <div class="timeline-date">Current Stage - Under Review</div>
+            <div class="timeline-comments">"Application is being processed"</div>
+          </div>
+        </div>
+        
+        <div class="timeline-item">
+          <div class="timeline-icon pending">
+            <i class="fas fa-clock"></i>
+          </div>
+          <div class="timeline-content pending">
+            <div class="timeline-role">Provost</div>
+            <div class="timeline-date">Pending</div>
+          </div>
+        </div>
+        
+        <div class="timeline-item">
+          <div class="timeline-icon pending">
+            <i class="fas fa-clock"></i>
+          </div>
+          <div class="timeline-content pending">
+            <div class="timeline-role">Treasurer</div>
+            <div class="timeline-date">Pending</div>
+          </div>
+        </div>
+        
+        <div class="timeline-item">
+          <div class="timeline-icon pending">
+            <i class="fas fa-clock"></i>
+          </div>
+          <div class="timeline-content pending">
+            <div class="timeline-role">Vice Chancellor</div>
+            <div class="timeline-date">Pending</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- No Results State -->
+      <div class="empty-state" id="noResultsState" style="display: none; text-align: center; padding: 40px; color: var(--muted);">
+        <i class="fas fa-search" style="font-size: 48px; margin-bottom: 16px; color: #cbd5e0;"></i>
+        <h3>No Application Found</h3>
+        <p>Please check the Application ID and try again.</p>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    &copy; 2025 File Movement & Approval System — Developed by THUNDER-BOND
+  </footer>
+
+  <script>
+    // Slideshow transition
+    const slides = document.querySelectorAll('.slide');
+    let idx = 0;
+    setInterval(() => {
+      slides[idx].classList.remove('active');
+      idx = (idx + 1) % slides.length;
+      slides[idx].classList.add('active');
+    }, 5000);
+
+    // Sample application data
+    const applications = {
+      'APP-2024-001': {
+        title: 'Room Change Request',
+        date: '2024-01-15',
+        status: 'In Progress'
+      },
+      'APP-2024-002': {
+        title: 'Leave Application',
+        date: '2024-01-14',
+        status: 'In Progress'
+      },
+      'APP-2024-003': {
+        title: 'Event Permission',
+        date: '2024-01-12',
+        status: 'Approved'
+      }
+    };
+
+    function searchApplication() {
+      const searchInput = document.getElementById('searchInput');
+      const appId = searchInput.value.trim().toUpperCase();
+      
+      const applicationInfo = document.getElementById('applicationInfo');
+      const trackingTimeline = document.getElementById('trackingTimeline');
+      const noResultsState = document.getElementById('noResultsState');
+      
+      if (applications[appId]) {
+        // Show application info
+        document.getElementById('infoId').textContent = appId;
+        document.getElementById('infoTitle').textContent = applications[appId].title;
+        document.getElementById('infoDate').textContent = applications[appId].date;
+        document.getElementById('infoStatus').textContent = applications[appId].status;
+        
+        applicationInfo.style.display = 'block';
+        trackingTimeline.style.display = 'block';
+        noResultsState.style.display = 'none';
+      } else {
+        applicationInfo.style.display = 'none';
+        trackingTimeline.style.display = 'none';
+        noResultsState.style.display = 'block';
+      }
+    }
+
+    // Allow pressing Enter to search
+    document.getElementById('searchInput').addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') {
+        searchApplication();
+      }
+    });
+  </script>
+</body>
+</html>

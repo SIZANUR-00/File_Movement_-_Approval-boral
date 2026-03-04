@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Employee Dashboard | File Movement & Approval System</title>
+
+  <!-- Fonts & Icons -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+  <script src="https://kit.fontawesome.com/a2e0f1e6b1.js" crossorigin="anonymous"></script>
+
+  <style>
+    :root {
+      --accent:#282424;
+      --accent-2:#3f8fd5;
+      --muted:#243557;
+      --gold:#ffce00;
+      --green:#3cdd77bd;
+      --container-width:1200px;
+    }
+
+    *{box-sizing:border-box;margin:0;padding:0;font-family:'Poppins',sans-serif}
+    body{
+      background:#f6f7fb;
+      color:#0b1720;
+      overflow-x:hidden;
+      min-height:100vh;
+    }
+
+    /* ---------- HEADER ---------- */
+    header.topbar{
+      position:fixed;top:0;left:0;right:0;z-index:60;
+      display:flex;justify-content:center;pointer-events:none;
+    }
+    header .bar{
+      pointer-events:auto;
+      width:100%;max-width:var(--container-width);
+      display:flex;align-items:center;justify-content:space-between;
+      gap:16px;padding:18px 24px;margin:16px;
+      background:linear-gradient(180deg,rgba(255,255,255,0.08),rgba(255,255,255,0.02));
+      border-radius:12px;
+      backdrop-filter:blur(10px) saturate(120%);
+      box-shadow:0 6px 24px rgba(6,12,34,0.12);
+    }
+
+    .brand{display:flex;align-items:center;gap:12px}
+    .brand .logo{
+      width:44px;height:44px;border-radius:8px;
+      overflow:hidden;background:linear-gradient(135deg,var(--accent),var(--accent-2));
+      display:flex;align-items:center;justify-content:center;
+    }
+    .brand .logo img{width:100%;height:100%;object-fit:contain}
+    .brand h1{color:#b29315;font-size:1.1rem;font-weight:600;text-shadow:0 2px 8px rgba(62, 8, 8, 0.35)}
+
+    nav.topnav{display:flex;align-items:center;gap:14px}
+    nav.topnav a{
+      color:#bf3737;text-decoration:none;font-weight:600;
+      padding:8px 14px;border-radius:8px;transition:0.25s;
+    }
+    nav.topnav a:hover{background:rgba(255,255,255,0.15);transform:translateY(-2px)}
+
+    .user-info{
+      display:flex;align-items:center;gap:20px;color:#129922;font-weight:900;
+    }
+    .user-info i{font-size:20px}
+    .logout-btn{
+      background:var(--gold);color:#000;border:none;
+      padding:8px 14px;border-radius:8px;cursor:pointer;
+      font-weight:600;display:flex;align-items:center;gap:6px;
+      box-shadow:0 6px 18px rgba(255,206,0,0.25);
+      transition:0.2s;
+    }
+    .logout-btn:hover{background:#ffd633;transform:translateY(-2px)}
+
+    /* ---------- HERO SLIDES ---------- */
+    .hero{
+      position:relative;
+      height:55vh;
+      min-height:480px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      text-align:center;
+      overflow:hidden;
+      margin-top:100px;
+    }
+    .slides{
+      position:absolute;inset:0;z-index:0;
+    }
+    .slide{
+      position:absolute;inset:0;
+      background-size:cover;background-position:center;
+      opacity:0;transform:scale(1.03);
+      transition:opacity 1.2s ease, transform 8s ease;
+    }
+    .slide.active{opacity:1;transform:scale(1)}
+    .hero::after{
+      content:"";
+      position:absolute;inset:0;z-index:1;
+      background:linear-gradient(180deg,rgba(2,6,23,0.45),rgba(2,6,23,0.6));
+    }
+    .hero-inner{
+      position:relative;z-index:2;
+      color:#fff;
+      text-align:center;
+      padding:20px;
+    }
+    .hero-inner h2{
+      font-size:2.2rem;
+      color:#ffce00;
+      margin-bottom:10px;
+      text-shadow: 0 2px 10px rgba(0,0,0,0.5);
+    }
+    .hero-inner p{
+      font-size:1.05rem;
+      color:#d9f0ff;
+      font-weight:500;
+      text-shadow: 0 1px 5px rgba(0,0,0,0.4);
+    }
+
+    /* ---------- MAIN DASHBOARD ---------- */
+    main{
+      max-width:var(--container-width);
+      margin:0 auto;
+      padding:40px 24px 60px;
+    }
+
+    .cards-row{
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
+      gap:24px;
+      margin-top:40px;
+    }
+
+    .card{
+      background:#fff;
+      border-radius:14px;
+      padding:28px 20px;
+      text-align:center;
+      box-shadow:0 10px 40px rgba(0,0,0,0.05);
+      transition:transform 0.3s ease, box-shadow 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+    .card:hover{
+      transform:translateY(-8px);
+      box-shadow:0 18px 48px rgba(0,0,0,0.08);
+    }
+    .card i{
+      font-size:40px;
+      color:var(--accent-2);
+      margin-bottom:16px;
+    }
+    .card h3{
+      color:var(--accent-2);
+      font-size:1.25rem;
+      margin-bottom:8px;
+    }
+    .card p{
+      color:var(--muted);
+      font-size:0.95rem;
+      margin-bottom:16px;
+    }
+    .btn-link{
+      background:var(--accent-2);
+      color:#fff;
+      padding:10px 20px;
+      border-radius:8px;
+      text-decoration:none;
+      font-weight:600;
+      transition:0.2s;
+      display:inline-block;
+    }
+    .btn-link:hover{background:#1e6fb0;transform:translateY(-2px)}
+
+    /* Special styling for the Apply Now card */
+    .apply-card {
+      position: relative;
+      background: linear-gradient(135deg, rgba(63, 143, 213, 0.9), rgba(0, 87, 164, 0.9)), 
+                  url('/File_Movement_-_Approval/image/apply-bg.jpg') center/cover;
+      color: #fff;
+      overflow: hidden;
+    }
+    .apply-card::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: url('/File_Movement_-_Approval/image/bauet-logo2.png') center/contain no-repeat;
+      opacity: 0.1;
+      z-index: 0;
+    }
+    .apply-card > * {
+      position: relative;
+      z-index: 1;
+    }
+    .apply-card i {
+      color: #ffce00;
+    }
+    .apply-card h3 {
+      color: #fff;
+    }
+    .apply-card p {
+      color: #f6f6f6;
+    }
+    .apply-card .btn-link {
+      background: #ffce00;
+      color: #000;
+    }
+    .apply-card .btn-link:hover {
+      background: #ffd633;
+    }
+
+    /* ---------- FOOTER ---------- */
+    footer{
+      text-align:center;
+      color:var(--muted);
+      margin-top:60px;
+      padding:20px;
+      font-size:14px;
+    }
+
+    @media (max-width:768px){
+      .brand h1{font-size:1rem}
+      .hero-inner h2{font-size:1.8rem}
+      .cards-row{grid-template-columns:1fr}
+    }
+  </style>
+</head>
+
+<body>
+  <!-- HEADER -->
+  <header class="topbar">
+    <div class="bar">
+      <div class="brand">
+        <div class="logo" title="BAUET">
+          <img src="/image/bauet-logo2.png" alt="BAUET Logo" style="width:100%; height:100%; object-fit:contain;">
+        </div>
+        <div style="line-height:1;">
+          <h1>File Movement & Approval</h1>
+          <small>Online Approval System</small>
+        </div>
+      </div>
+
+      <nav class="topnav">
+        <a href="apply.html"><i class="fas fa-paper-plane"></i> Apply</a>
+        <a href="my_applications.html"><i class="fas fa-folder-open"></i> My Files</a>
+        <a href="status.html"><i class="fas fa-search"></i> Tracking</a>
+        <a href="notifications.html"><i class="fas fa-bell"></i> Notifications</a>
+      </nav>
+
+      <div class="user-info">
+        <i class="fas fa-user-circle"></i>
+        <span>Sizanur</span>
+        <button class="logout-btn" onclick="logout()">
+          <i class="fas fa-sign-out-alt"></i> Logout
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- HERO SLIDES -->
+  <section class="hero" id="hero">
+    <div class="slides" id="slides">
+      <div class="slide active" style="background-image:url('/image/BAUET-Campus.jpg')"></div>
+      <div class="slide" style="background-image:url('/image/bauet.jpeg')"></div>
+      <div class="slide" style="background-image:url('/image/boral_back.jpeg')"></div>
+      <div class="slide" style="background-image:url('/image/acc_buli.jpeg')"></div>
+    </div>
+
+    <div class="hero-inner">
+      <h2>Welcome back, Sizanur!</h2>
+      <p>Manage your file movements, track approvals, and stay updated — all in one place.</p>
+    </div>
+  </section>
+
+  <!-- MAIN CONTENT -->
+  <main>
+    <!-- Apply Now (Single Row) -->
+    <div class="cards-row" style="grid-template-columns:1fr;">
+      <div class="card apply-card">
+        <i class="fas fa-paper-plane"></i>
+        <h3>Apply for File Movement</h3>
+        <p>Submit a new application and select your department.</p>
+        <a href="apply.html" class="btn-link">Apply Now</a>
+      </div>
+    </div>
+
+    <!-- Other Cards -->
+    <div class="cards-row">
+      <div class="card">
+        <i class="fas fa-search"></i>
+        <h3>View Tracking</h3>
+        <p>Track the status of your file applications in real-time.</p>
+        <a href="status.html" class="btn-link">View Tracing</a>
+      </div>
+
+      <div class="card">
+        <i class="fas fa-folder-open"></i>
+        <h3>My Applications</h3>
+        <p>View your submitted files and their current status.</p>
+        <a href="my_applications.html" class="btn-link">View Files</a>
+      </div>
+
+      <div class="card">
+        <i class="fas fa-bell"></i>
+        <h3>Notifications</h3>
+        <p>Check updates and actions taken by officers.</p>
+        <a href="notifications.html" class="btn-link">View Notifications</a>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    &copy; 2025 File Movement & Approval System — Developed by THUNDER-BOND
+  </footer>
+
+  <script>
+    // Slideshow transition
+    const slides = document.querySelectorAll('.slide');
+    let idx = 0;
+    setInterval(() => {
+      slides[idx].classList.remove('active');
+      idx = (idx + 1) % slides.length;
+      slides[idx].classList.add('active');
+    }, 5000);
+  </script>
+  <script type="module" src="../js/employee.js"></script>
+   <script type="module" src="../js/auth.js"></script>
+</body>
+</html>

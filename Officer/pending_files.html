@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Pending Files</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+<style>
+    body {
+  font-family: Arial, sans-serif;
+  background-color: #f4f6f8;
+  margin: 20px;
+  color: #333;
+}
+
+h2 {
+  text-align: center;
+  color: #2c3e50;
+  margin-bottom: 30px;
+}
+
+table {
+  width: 90%;
+  margin: 0 auto;
+  border-collapse: collapse;
+  background-color: #fff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+th, td {
+  padding: 12px 15px;
+  text-align: left;
+  border-bottom: 1px solid #ddd;
+}
+
+thead {
+  background-color: #3498db;
+  color: #fff;
+}
+
+tbody tr:hover {
+  background-color: #f1f1f1;
+}
+
+a {
+  text-decoration: none;
+  color: #2980b9;
+  font-weight: bold;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+</style>
+
+</head>
+<body>
+  <h2>📥 Pending Files</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Title</th>
+        <th>Department</th>
+        <th>Submitted By</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for file in pending_files %}
+      <tr>
+        <td>{{ file.id }}</td>
+        <td>{{ file.title }}</td>
+        <td>{{ file.department }}</td>
+        <td>{{ file.submitted_by }}</td>
+        <td><a href="/view_file/{{ file.id }}">View</a></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</body>
+</html>

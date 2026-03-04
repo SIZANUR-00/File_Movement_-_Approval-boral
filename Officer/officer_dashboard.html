@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Officer Dashboard</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+
+  <style>
+    /* ---------- Reset & base ---------- */
+    :root{
+      --accent:#282424;
+      --accent-2:#3f8fd5;
+      --muted:#243557;
+      --gold:#ffce00;
+      --green: #3cdd77bd;
+      --glass: rgba(255,255,255,0.08);
+      --container-width:1200px;
+      --dashboard-primary: #0057a4;
+      --dashboard-secondary: #ffce00;
+      --card-bg: #fff;
+      --card-shadow: rgba(0,0,0,0.05);
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family: 'Poppins', system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      color:#0b1720;
+      background:#f6f7fb;
+      -webkit-font-smoothing:antialiased;
+      -moz-osx-font-smoothing:grayscale;
+      overflow-x:hidden;
+    }
+    a{color:inherit; text-decoration:none}
+    img{max-width:100%; display:block}
+    .wrap { max-width: var(--container-width); margin:0 auto; padding:0 22px; }
+
+    /* Nav (transparent/fixed) */
+    header.topbar{
+      position:fixed;
+      top:0; left:0; right:0;
+      z-index:60;
+      display:flex;
+      justify-content:center;
+      pointer-events:none;
+    }
+    header .bar {
+      pointer-events:auto;
+      width:100%;
+      max-width:var(--container-width);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:16px;
+      padding:18px 22px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02));
+      border-radius:10px;
+      margin:18px;
+      backdrop-filter: blur(8px) saturate(120%);
+      box-shadow: 0 6px 24px rgba(6,12,34,0.12);
+      transition:transform .35s ease, background .35s ease, box-shadow .35s ease;
+    }
+    header.scrolled .bar { 
+      padding:10px 18px; 
+      transform:translateY(-2px); 
+      background: rgba(0, 87, 164, 0.95);
+      box-shadow:0 8px 30px rgba(6,12,34,0.14); 
+    }
+    .brand {
+      display:flex; align-items:center; gap:12px;
+    }
+    .brand .logo {
+      width:44px; height:44px; border-radius:8px;
+      display:flex; align-items:center; justify-content:center;
+      background: linear-gradient(135deg,var(--accent),var(--accent-2));
+      color:white; font-weight:700;
+      box-shadow: 0 6px 18px rgba(241, 231, 179, 0.402);
+      font-size:18px; overflow: hidden;
+    }
+    .brand h1 { 
+      font-size:1.05rem; margin:0; font-weight:600; 
+      color:#fff; 
+      letter-spacing:0.2px; 
+      text-shadow: 0 2px 8px rgba(0,0,0,0.35); 
+    }
+    .brand small { 
+      display:block; font-weight:500; font-size:12px; 
+      color: rgba(255,255,255,0.9); margin-top:2px; opacity:0.95; 
+    }
+    nav.topnav {
+      display:flex; align-items:center; gap:12px;
+    }
+    nav.topnav a {
+      color:#fff; padding:8px 12px; border-radius:8px; font-weight:600; font-size:0.95rem; opacity:0.95;
+      transition:all .22s ease;
+      background: transparent;
+    }
+    nav.topnav a:hover { 
+      transform:translateY(-3px); 
+      opacity:1; 
+      background: rgba(255,255,255,0.1);
+    }
+    nav.topnav a.btn-logout { 
+      background:var(--gold);
+      color:#000; 
+      padding: 10px 20px; 
+      border-radius:25px 5px;  
+      box-shadow: 0 6px 18px rgba(255,206,0,0.25); 
+    }
+
+    /* Hero section - FULL SCREEN - UPDATED SLIDESHOW */
+    .hero {
+      position:relative;
+      height:100vh;
+      min-height:640px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      text-align:center;
+      overflow:hidden;
+      background: #020617;
+      padding-top: 0;
+    }
+
+    /* Slides container - UPDATED TO MATCH INDEX.HTML */
+    .slides {
+      position:fixed; 
+      inset:0; 
+      z-index:0;
+    }
+    .slide {
+      position:absolute; 
+      inset:0; 
+      background-size:cover; 
+      background-position:center center;
+      opacity:0; 
+      transform:scale(1.02); 
+      transition:opacity 1.2s ease, transform 8s ease;
+      will-change:opacity, transform;
+    }
+    .slide.active { 
+      opacity:1; 
+      transform:scale(1); 
+    }
+
+    .hero::after {
+      content:"";
+      position:absolute; 
+      inset:0; 
+      z-index:1;
+      background: linear-gradient(180deg, rgba(2,6,23,0.40) 0%, rgba(2,6,23,0.20) 35%, rgba(2,6,23,0.55) 100%);
+      pointer-events:none;
+    }
+
+    .hero-inner {
+      position:relative; 
+      z-index:2; 
+      max-width:980px; 
+      padding:28px;
+      color:hsla(184, 88%, 59%, 0.828);
+      display:flex; 
+      flex-direction:column; 
+      align-items:center; 
+      gap:18px;
+    }
+    .hero-title {
+      font-size: clamp(28px, 5.6vw, 54px);
+      text-shadow: 10px 20px 40px rgba(29, 245, 245, 0.3);
+      font-weight:700;
+      line-height:1.02;
+      letter-spacing:-0.6px;
+      margin:0;
+    }
+    .hero-sub {
+      max-width:720px;
+      font-size: clamp(14px, 1.8vw, 18px);
+      color: rgba(181, 245, 196, 0.94);
+      margin:0;
+      font-weight:500;
+      text-shadow: 0 8px 18px rgba(0,0,0,0.35);
+    }
+    
+    /* Scroll Down Prompt - UPDATED TO MATCH INDEX.HTML */
+    .hero-scroll {
+      position:absolute; 
+      bottom:28px; 
+      left:50%; 
+      transform:translateX(-50%); 
+      z-index:3; 
+      color:rgba(255,255,255,0.95);
+      font-size:13px; 
+      display:flex; 
+      align-items:center; 
+      gap:10px; 
+      opacity:0.95;
+    }
+    .mouse {
+      width:20px; 
+      height:34px; 
+      border:2px solid rgba(255,255,255,0.9); 
+      border-radius:12px; 
+      display:inline-block;
+      position:relative;
+    }
+    .mouse .wheel { 
+      position:absolute; 
+      top:8px; 
+      left:50%; 
+      transform:translateX(-50%); 
+      width:4px; 
+      height:6px; 
+      border-radius:2px; 
+      background:rgba(255,255,255,0.9);
+      animation:wheel 1.6s infinite;
+    }
+    @keyframes wheel {
+      0%{opacity:1; transform:translate(-50%,0)}
+      50%{opacity:0.2; transform:translate(-50%,6px)}
+      100%{opacity:1; transform:translate(-50%,0)}
+    }
+
+    /* Main Panel/Cards */
+    .panel {
+      position: relative;
+      z-index: 10;
+      background:#fff;
+      border-radius:16px;
+      box-shadow:0 18px 50px rgba(10,18,30,0.06);
+      margin: -40px auto 0 auto;
+      max-width:var(--container-width);
+      padding:28px;
+      display:flex; 
+      justify-content:center; 
+      flex-wrap:wrap; 
+      gap:18px;
+    }
+
+    /* Feature Card */
+    .feature-card {
+      width: 100%;
+      max-width: 300px;
+      padding:22px; 
+      border-radius:12px; 
+      background:var(--card-bg); 
+      border:1px solid rgba(11,23,32,0.04);
+      box-shadow: 0 8px 28px rgba(10,18,30,0.04); 
+      text-align:center; 
+      transition:transform .28s ease, box-shadow .28s ease;
+      cursor: pointer;
+    }
+    .feature-card:hover { 
+      transform:translateY(-8px); 
+      box-shadow: 0 16px 40px rgba(10,18,30,0.08); 
+    }
+    .feature-card .icon { 
+      font-size:32px; 
+      margin-bottom:12px; 
+      color:var(--dashboard-primary); 
+    }
+    .feature-card h4 { 
+      margin:0 0 8px 0; 
+      color:var(--accent-2); 
+      font-size:1.2rem;
+    }
+    .feature-card p { 
+      margin:0 0 16px 0; 
+      color:var(--muted); 
+      font-weight:500; 
+      font-size:0.95rem; 
+    }
+    .feature-card a.btn-link {
+      background:var(--dashboard-primary); 
+      color: white; 
+      padding: 10px 20px; 
+      text-decoration: none; 
+      border-radius: 6px; 
+      font-weight: 600; 
+      display: inline-block;
+      transition: background 0.2s ease;
+    }
+    .feature-card a.btn-link:hover {
+      background: var(--accent-2);
+    }
+
+    footer.site { 
+      margin-top:36px; 
+      text-align:center; 
+      color:var(--muted); 
+      padding:28px 12px; 
+      font-size:14px; 
+    }
+
+    @media (max-width: 768px) {
+      header .bar { 
+        margin:12px; 
+        padding:12px 14px; 
+        flex-direction: column; 
+        align-items: flex-start;
+      }
+      nav.topnav { 
+        flex-direction: column; 
+        align-items: flex-start; 
+        gap: 8px; 
+        width: 100%;
+      }
+      nav.topnav a { 
+        width: 100%; 
+        text-align: center;
+      }
+      .hero { min-height: 560px; }
+      .hero-inner { padding: 18px; }
+      .panel{ padding:18px; }
+    }
+  </style>
+</head>
+<body>
+
+  <header class="topbar" id="header">
+    <div class="bar wrap" role="navigation" aria-label="Officer navigation">
+      <div class="brand" aria-hidden="false">
+        <div class="logo" title="BAUET">
+          <img src="/image/BAUET.png" alt="BAUET Logo" style="width:100%; height:100%; object-fit:contain;">
+        </div>
+        <div style="line-height:1;">
+          <h1>Officer Dashboard</h1>
+          <small>Automated File Movement and Approve <br> Boral Hall, BAUET</small>
+        </div>
+      </div>
+
+      <nav class="topnav" aria-label="dashboard menu">
+        <a href="pending_files.html">Pending Files</a>
+        <a href="approved_files.html">Approved Files</a>
+        <a href="notifications.html">Notifications</a>
+        <a href="#" onclick="logout()" class="btn-logout">Logout</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- HERO (slideshow) - UPDATED TO MATCH INDEX.HTML -->
+  <section class="hero" id="hero">
+    <div class="slides" id="slides">
+      <div class="slide active" style="background-image:url('/image/bauetpondwithsky.jpg');"></div>
+      <div class="slide" style="background-image:url('/image/bauetpanaromic.jpg');"></div>
+      <div class="slide" style="background-image:url('/image/bauetduckpond.jpg');"></div>
+      <div class="slide" style="background-image:url('/image/BAUET Campus Back.jpg');"></div>
+      <div class="slide" style="background-image:url('/image/IMG_9473.jpg');"></div>
+    </div>
+
+    <div class="hero-inner">
+      <h2 class="hero-title">Welcome, Officer</h2>
+      <p class="hero-sub">You can review file submissions, approve or reject them, and track activity within the secure system.</p>
+    </div>
+
+    <div class="hero-scroll" aria-hidden="true">
+      <div class="mouse" aria-hidden="true"><div class="wheel"></div></div>
+      <div style="opacity:.95">Scroll to explore</div>
+    </div>
+  </section>
+
+  <main id="main-content">
+    <section class="panel wrap" aria-labelledby="dashboardHeading">
+      <div id="dashboardHeading" style="display:none;">Officer Dashboard Overview</div>
+
+      <div class="feature-card" role="listitem">
+        <div class="icon">📥</div>
+        <h4>Pending Applications</h4>
+        <p>Review applications waiting for your approval.</p>
+        <a href="pending_files.html" class="btn-link">View Pending</a>
+      </div>
+
+      <div class="feature-card" role="listitem">
+        <div class="icon">✅</div>
+        <h4>Approved Files</h4>
+        <p>View and manage the applications you've approved.</p>
+        <a href="approved_files.html" class="btn-link">See Approved</a>
+      </div>
+
+      <div class="feature-card" role="listitem">
+        <div class="icon">🔔</div>
+        <h4>Notifications</h4>
+        <p>Get status updates and reminders.</p>
+        <a href="notifications.html" class="btn-link">Check Alerts</a>
+      </div>
+    </section>
+
+    <footer class="site">
+      <span>&copy; 2025 File Approval System | THUNDER-BOND</span>
+    </footer>
+  </main>
+
+  <script>
+    (function(){
+      // Slideshow functionality - EXACTLY LIKE INDEX.HTML
+      const slides = document.querySelectorAll('.slide');
+      let idx = 0;
+      const delay = 6000;
+      
+      function goTo(i){
+        slides.forEach((s, k) => s.classList.toggle('active', k===i));
+      }
+      
+      function next(){
+        idx = (idx + 1) % slides.length;
+        goTo(idx);
+      }
+      
+      let timer = setInterval(next, delay);
+
+      // Pause on hover
+      const hero = document.getElementById('hero');
+      hero.addEventListener('mouseenter', ()=> clearInterval(timer));
+      hero.addEventListener('mouseleave', ()=> timer = setInterval(next, delay));
+
+      // Header scroll effect
+      const header = document.getElementById('header');
+      function onScroll(){
+        const y = window.scrollY || window.pageYOffset;
+        if (y > window.innerHeight - 80) {
+          header.classList.add('scrolled'); 
+        }
+        else {
+          header.classList.remove('scrolled');
+        }
+      }
+      window.addEventListener('scroll', onScroll, {passive:true});
+      onScroll();
+
+      // Smooth Scroll Functionality
+      const scrollDownButton = document.querySelector('.hero-scroll');
+      const mainContent = document.getElementById('main-content');
+      
+      if (scrollDownButton && mainContent) {
+        scrollDownButton.addEventListener('click', () => {
+          const offsetTop = mainContent.offsetTop;
+          
+          window.scroll({
+            top: offsetTop,
+            behavior: 'smooth'
+          });
+        });
+      }
+    })();
+  </script>
+  <script type="module" src="../js/officer.js"></script>
+  <script type="module" src="../js/auth.js"></script>
+</body>
+</html>

@@ -1,0 +1,871 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>File Movement & Approval</title>
+
+  <!-- Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    /* ---------- Reset & base ---------- */
+    :root{
+      --accent:#282424;
+      --accent-2:#3f8fd5;
+      --muted:#243557;
+      --gold:#ffce00;
+      --green: #3cdd77bd;
+      --glass: rgba(255,255,255,0.08);
+      --container-width:1200px;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family: 'Hind Siliguri', 'Poppins', system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      color:#0b1720;
+      background:#f6f7fb;
+      -webkit-font-smoothing:antialiased;
+      -moz-osx-font-smoothing:grayscale;
+      overflow-x:hidden;
+    }
+    a{color:inherit; text-decoration:none}
+    img{max-width:100%; display:block}
+
+    /* ---------- Page layout ---------- */
+    .wrap { max-width: var(--container-width); margin:0 auto; padding:0 22px; }
+
+    /* ---------- Nav (transparent) ---------- */
+    header.topbar{
+      position:fixed;
+      top:0; left:0; right:0;
+      z-index:60;
+      display:flex;
+      justify-content:center;
+      pointer-events:none;
+    }
+    header .bar {
+      pointer-events:auto;
+      width:100%;
+      max-width:var(--container-width);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:16px;
+      padding:18px 22px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02));
+      border-radius:10px;
+      margin:18px;
+      backdrop-filter: blur(8px) saturate(120%);
+      box-shadow: 0 6px 24px rgba(6,12,34,0.12);
+      transition:transform .35s ease, background .35s ease, box-shadow .35s ease;
+    }
+    header.scrolled .bar { padding:10px 18px; transform:translateY(-2px); box-shadow:0 8px 30px rgba(6,12,34,0.14); }
+
+    .brand {
+      display:flex;
+      align-items:center;
+      gap:12px;
+    }
+    .brand .logo {
+      width:44px; height:44px; border-radius:8px;
+      display:flex; align-items:center; justify-content:center;
+      background: linear-gradient(135deg,var(--accent),var(--accent-2));
+      color:white; font-weight:700;
+      box-shadow: 0 6px 18px rgba(241, 231, 179, 0.402);
+      font-size:18px;
+      overflow: hidden;
+    }
+    .brand h1 { font-size:1.05rem; margin:0; font-weight:600; color:#fff; letter-spacing:0.2px; text-shadow: 0 2px 8px rgba(0,0,0,0.35); }
+    .brand small { display:block; font-weight:500; font-size:12px; color: rgba(255,255,255,0.9); margin-top:2px; opacity:0.95; }
+
+    nav.topnav {
+      display:flex; align-items:center; gap:12px;
+    }
+    nav.topnav a {
+      color:#fff; padding:8px 12px; border-radius:8px; font-weight:600; font-size:0.95rem; opacity:0.95;
+      transition:all .22s ease;
+    }
+    nav.topnav a:hover { transform:translateY(-3px); opacity:1; }
+    nav.topnav .btn-login { 
+      background:var(--gold); color:#000; 
+      padding: 10px 50px; 
+      border-radius:25px 5px;  
+      box-shadow: 0 6px 18px rgba(255,206,0,0.25); 
+    }
+    nav.topnav .btn-register { 
+      background:var(--green); 
+      color:#000; 
+      padding:8px 10px; 
+      border-radius:25px 5px; 
+    }
+
+    /* Language Switcher */
+    .lang-switcher {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 20px;
+      padding: 6px 12px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    .lang-switcher:hover {
+      background: rgba(255,255,255,0.2);
+      transform: translateY(-2px);
+    }
+    .lang-flag {
+      width: 20px;
+      height: 15px;
+      border-radius: 2px;
+      overflow: hidden;
+    }
+    .lang-text {
+      color: white;
+      font-weight: 600;
+      font-size: 0.85rem;
+    }
+
+    /* ---------- Hero slideshow ---------- */
+    .hero {
+      position:relative;
+      height:100vh;
+      min-height:640px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      text-align:center;
+      overflow:hidden;
+    }
+    .slides {
+      position:fixed; inset:0; z-index:0;
+    }
+    .slide {
+      position:absolute; inset:0; background-size:cover; background-position:center center;
+      opacity:0; transform:scale(1.02); transition:opacity 1.2s ease, transform 8s ease;
+      will-change:opacity, transform;
+    }
+    .slide.active { opacity:1; transform:scale(1); }
+
+    .hero::after {
+      content:"";
+      position:absolute; inset:0; z-index:1;
+      background: linear-gradient(180deg, rgba(2,6,23,0.40) 0%, rgba(2,6,23,0.20) 35%, rgba(2,6,23,0.55) 100%);
+      pointer-events:none;
+    }
+
+    .hero-inner {
+      position:relative; z-index:2; max-width:980px; padding:28px;
+      color:hsla(184, 88%, 59%, 0.828);
+      display:flex; flex-direction:column; align-items:center; gap:18px;
+    }
+    .hero-title {
+      font-size: clamp(28px, 5.6vw, 54px);
+      text-shadow: 10px 20px 40px rgba(29, 245, 245, 0.3);
+      font-weight:700;
+      line-height:1.02;
+      letter-spacing:-0.6px;
+      margin:0;
+    }
+    .hero-sub {
+      max-width:720px;
+      font-size: clamp(14px, 1.8vw, 18px);
+      color: rgba(181, 245, 196, 0.94);
+      margin:0;
+      font-weight:500;
+      text-shadow: 0 8px 18px rgba(0,0,0,0.35);
+    }
+    .hero-cta {
+      margin-top:8px;
+      display:flex; gap:12px; align-items:center; justify-content:center; margin-bottom:6px;
+    }
+    .cta-primary {
+      background:rgba(231, 202, 36, 0.958); 
+      color:#000; 
+      padding: 10px 100px; 
+      border-radius:20px 10px;  
+      box-shadow: 5px 5px rgba(60, 59, 54, 0.318);  
+      border: none; 
+      cursor:pointer;
+      font-weight: 600;
+    }
+
+    .hero-scroll {
+      position:absolute; bottom:28px; left:50%; transform:translateX(-50%); z-index:3; color:rgba(255,255,255,0.95);
+      font-size:13px; display:flex; align-items:center; gap:10px; opacity:0.95;
+    }
+    .mouse {
+      width:20px; height:34px; border:2px solid rgba(255,255,255,0.9); border-radius:12px; display:inline-block;
+      position:relative;
+    }
+    .mouse .wheel { 
+      position:absolute; top:8px; left:50%; transform:translateX(-50%); width:4px; height:6px; border-radius:2px; background:rgba(255,255,255,0.9);
+      animation:wheel 1.6s infinite;
+    }
+    @keyframes wheel {
+      0%{opacity:1; transform:translate(-50%,0)}
+      50%{opacity:0.2; transform:translate(-50%,6px)}
+      100%{opacity:1; transform:translate(-50%,0)}
+    }
+
+    /* ---------- Below-hero content ---------- */
+    main { position:relative; z-index:10; margin-top:-40px; }
+    .panel {
+      background:#fff;
+      border-radius:16px;
+      box-shadow:0 18px 50px rgba(10,18,30,0.06);
+      margin: 0 auto;
+      max-width:var(--container-width);
+      padding:28px;
+      transform: translateY(0);
+    }
+    .notice-row { display:flex; gap:18px; align-items:flex-start; flex-wrap:wrap; }
+    .notice-left { flex:1 1 380px; }
+    .notice-right { flex:1 1 320px; display:flex; gap:12px; flex-direction:column; }
+
+    .notice-title { font-size:20px; font-weight:700; color:var(--accent-2); margin-bottom:8px; }
+    .notice-list { display:flex; flex-direction:column; gap:10px; }
+    .notice-item {
+      background: linear-gradient(90deg, rgba(0,87,164,0.06), rgba(0,87,164,0.02));
+      border-left:4px solid var(--accent);
+      padding:12px 14px; border-radius:8px; color:#0b1720; font-weight:600;
+    }
+
+    .features-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:18px; margin-top:18px; }
+    .feature-card {
+      padding:22px; border-radius:12px; background:#fff; border:1px solid rgba(11,23,32,0.04);
+      box-shadow: 0 8px 28px rgba(10,18,30,0.04); text-align:left; transition:transform .28s ease, box-shadow .28s ease;
+      cursor: pointer;
+    }
+    .feature-card:hover { transform:translateY(-8px); box-shadow: 0 16px 40px rgba(10,18,30,0.08); }
+    .feature-card h4 { margin:0 0 8px 0; color:var(--accent-2); }
+    .feature-card p { margin:0; color:var(--muted); font-weight:500; }
+
+    footer.site { margin-top:36px; text-align:center; color:var(--muted); padding:28px 12px; font-size:14px; }
+
+    /* ---------- Popup Overlay ---------- */
+    .popup-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(2, 6, 23, 0.8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.3s ease, visibility 0.3s ease;
+      backdrop-filter: blur(6px);
+    }
+    
+    .popup-overlay.active {
+      opacity: 1;
+      visibility: visible;
+    }
+    
+    .popup-container {
+      background: #fff;
+      border-radius: 16px;
+      width: 90%;
+      max-width: 460px;
+      padding: 32px;
+      box-shadow: 0 24px 60px rgba(6, 12, 34, 0.25);
+      transform: translateY(20px);
+      transition: transform 0.4s ease;
+      position: relative;
+    }
+    
+    .popup-overlay.active .popup-container {
+      transform: translateY(0);
+    }
+    
+    .popup-close {
+      position: absolute;
+      top: 18px;
+      right: 18px;
+      background: transparent;
+      border: none;
+      font-size: 24px;
+      cursor: pointer;
+      color: var(--muted);
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      transition: background 0.2s ease;
+    }
+    
+    .popup-close:hover {
+      background: rgba(0, 0, 0, 0.05);
+    }
+    
+    .popup-header {
+      text-align: center;
+      margin-bottom: 28px;
+    }
+    
+    .popup-header h2 {
+      color: var(--accent-2);
+      margin: 0 0 8px 0;
+      font-size: 24px;
+    }
+    
+    .popup-header p {
+      color: var(--muted);
+      margin: 0;
+      font-size: 14px;
+    }
+    
+    .popup-form {
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+    
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    
+    .form-group label {
+      font-weight: 600;
+      font-size: 14px;
+      color: var(--accent-2);
+    }
+    
+    .form-group input, .form-group select {
+      padding: 12px 14px;
+      border: 1px solid rgba(11, 23, 32, 0.15);
+      border-radius: 8px;
+      font-family: 'Hind Siliguri', 'Poppins', sans-serif;
+      font-size: 15px;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+    
+    .form-group input:focus, .form-group select:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(0, 87, 164, 0.1);
+    }
+    
+    .form-row {
+      display: flex;
+      gap: 12px;
+    }
+    
+    .form-row .form-group {
+      flex: 1;
+    }
+    
+    .login-options {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 14px;
+    }
+    
+    .remember {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    
+    .remember input {
+      width: 16px;
+      height: 16px;
+    }
+    
+    .forgot-password {
+      color: var(--accent);
+      font-weight: 600;
+    }
+    
+    .popup-button {
+      background: var(--accent);
+      color: white;
+      border: none;
+      padding: 14px;
+      border-radius: 8px;
+      font-family: 'Hind Siliguri', 'Poppins', sans-serif;
+      font-weight: 600;
+      font-size: 16px;
+      cursor: pointer;
+      transition: background 0.2s ease, transform 0.2s ease;
+      margin-top: 8px;
+    }
+    
+    .popup-button:hover {
+      background: var(--accent-2);
+      transform: translateY(-2px);
+    }
+    
+    .popup-footer {
+      text-align: center;
+      margin-top: 20px;
+      font-size: 14px;
+      color: var(--muted);
+    }
+    
+    .popup-footer a {
+      color: var(--accent);
+      font-weight: 600;
+      cursor: pointer;
+    }
+    
+    .terms {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      font-size: 14px;
+      color: var(--muted);
+    }
+    
+    .terms input {
+      margin-top: 4px;
+    }
+    
+    .terms a {
+      color: var(--accent);
+      font-weight: 600;
+    }
+
+    @media (max-width: 980px){
+      header .bar { margin:12px; padding:12px 14px; }
+      .brand h1{ font-size:0.95rem }
+      .hero { min-height:560px }
+    }
+    @media (max-width:720px){
+      .brand h1{ display:none }
+      .bar{ padding:10px 12px; gap:10px }
+      nav.topnav a { padding:8px 10px; font-size:0.92rem }
+      .notice-row { flex-direction:column; }
+      .hero-sub{ font-size:15px }
+      .panel{ padding:18px }
+      .popup-container { padding: 24px; }
+      .form-row { flex-direction: column; gap: 18px; }
+      .lang-text { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NAV (transparent) -->
+  <header class="topbar" id="header">
+    <div class="bar wrap" role="navigation" aria-label="main navigation">
+      <div class="brand" aria-hidden="false">
+        <div class="logo" title="BAUET">
+          <img src="./image/bauet-logo2.png" alt="BAUET Logo" style="width:100%; height:100%; object-fit:contain;">
+        </div>
+        <div style="line-height:1;">
+          <h1>File Movement & Approval</h1>
+          <small>অনলাইন অনুমোদন ব্যবস্থা</small>
+        </div>
+      </div>
+
+      <nav class="topnav" aria-label="main menu">
+        <a class="lang-switcher" href="index.html">
+          <div class="lang-flag">
+            <img src="https://flagcdn.com/w40/gb.png" alt="English" style="width:100%; height:100%; object-fit:cover;">
+          </div>
+          <div class="lang-text">EN</div>
+        </a>
+        <a class="btn-login" href="#" id="loginBtn">লগইন</a>
+        <a class="btn-register" href="#" id="registerBtn">নিবন্ধন</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- LOGIN POPUP -->
+  <div class="popup-overlay" id="loginPopup">
+    <div class="popup-container">
+      <button class="popup-close" id="closeLogin">&times;</button>
+      
+      <div class="popup-header">
+        <h2>আপনার অ্যাকাউন্টে লগইন করুন</h2>
+        <p>আপনার ড্যাশবোর্ড অ্যাক্সেস করুন এবং ফাইল পরিচালনা করুন</p>
+      </div>
+      
+      <form class="popup-form" id="loginForm">
+        <div class="form-group">
+          <label for="username">ব্যবহারকারীর নাম বা ইমেইল</label>
+          <input type="text" id="username" name="username" placeholder="আপনার ব্যবহারকারীর নাম বা ইমেইল দিন" required>
+        </div>
+        
+        <div class="form-group">
+          <label for="password">পাসওয়ার্ড</label>
+          <input type="password" id="password" name="password" placeholder="আপনার পাসওয়ার্ড দিন" required>
+        </div>
+        
+        <div class="login-options">
+          <div class="remember">
+            <input type="checkbox" id="remember">
+            <label for="remember">আমাকে মনে রাখুন</label>
+          </div>
+          <a href="#" class="forgot-password">পাসওয়ার্ড ভুলে গেছেন?</a>
+        </div>
+        
+        <button type="submit" class="popup-button">লগইন</button>
+      </form>
+      
+      <div class="popup-footer">
+        <span>অ্যাকাউন্ট নেই?</span>
+        <a id="switchToRegister">এখানে নিবন্ধন করুন</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- REGISTER POPUP -->
+  <div class="popup-overlay" id="registerPopup">
+    <div class="popup-container">
+      <button class="popup-close" id="closeRegister">&times;</button>
+      
+      <div class="popup-header">
+        <h2>একটি অ্যাকাউন্ট তৈরি করুন</h2>
+        <p>আমাদের ফাইল ব্যবস্থাপনা সিস্টেমে যোগ দিন</p>
+      </div>
+      
+      <form class="popup-form" id="registerForm">
+        <div class="form-row">
+          <div class="form-group">
+            <label for="firstName">নামের প্রথম অংশ</label>
+            <input type="text" id="firstName" name="firstName" placeholder="আপনার নামের প্রথম অংশ দিন" required>
+          </div>
+          <div class="form-group">
+            <label for="lastName">নামের শেষাংশ</label>
+            <input type="text" id="lastName" name="lastName" placeholder="আপনার নামের শেষাংশ দিন" required>
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label for="email">ইমেইল ঠিকানা</label>
+          <input type="email" id="email" name="email" placeholder="আপনার ইমেইল ঠিকানা দিন" required>
+        </div>
+        
+        <div class="form-group">
+          <label for="userType">ব্যবহারকারীর ধরন</label>
+          <select id="userType" name="userType" required>
+            <option value="">আপনার ভূমিকা নির্বাচন করুন</option>
+            <option value="employee">কর্মচারী</option>
+            <option value="officer">অফিসার</option>
+            <option value="admin">প্রশাসক</option>
+          </select>
+        </div>
+        
+        <div class="form-group">
+          <label for="department">বিভাগ</label>
+          <select id="department" name="department" required>
+            <option value="">আপনার বিভাগ নির্বাচন করুন</option>
+            <option value="hr">মানব সম্পদ</option>
+            <option value="finance">অর্থ</option>
+            <option value="it">আইটি</option>
+            <option value="operations">অপারেশন</option>
+            <option value="marketing">বিপণন</option>
+          </select>
+        </div>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label for="regPassword">পাসওয়ার্ড</label>
+            <input type="password" id="regPassword" name="regPassword" placeholder="একটি পাসওয়ার্ড তৈরি করুন" required>
+          </div>
+          <div class="form-group">
+            <label for="confirmPassword">পাসওয়ার্ড নিশ্চিত করুন</label>
+            <input type="password" id="confirmPassword" name="confirmPassword" placeholder="আপনার পাসওয়ার্ড নিশ্চিত করুন" required>
+          </div>
+        </div>
+        
+        <div class="terms">
+          <input type="checkbox" id="agreeTerms" required>
+          <label for="agreeTerms">আমি <a href="#">সেবার শর্তাবলী</a> এবং <a href="#">গোপনীয়তা নীতি</a> মেনে নিচ্ছি</label>
+        </div>
+        
+        <button type="submit" class="popup-button">অ্যাকাউন্ট তৈরি করুন</button>
+      </form>
+      
+      <div class="popup-footer">
+        <span>ইতিমধ্যে একটি অ্যাকাউন্ট আছে?</span>
+        <a id="switchToLogin">এখানে লগইন করুন</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- HERO (slideshow) -->
+  <section class="hero" id="hero">
+    <div class="slides" id="slides">
+      <!-- Fixed image URLs -->
+      <div class="slide active" style="background-image:url('./image/BAUET-Campus.jpg')"></div>
+      <div class="slide" style="background-image:url('./image/bauet.jpeg')"></div>
+      <div class="slide" style="background-image:url('./image/boral_back.jpeg')"></div>
+      <div class="slide" style="background-image:url('./image/acc_buli.jpeg')"></div>
+      <div class="slide" style="background-image:url('./image/sky_view.jpeg')"></div>
+    </div>
+    <div class="hero-inner">
+      <h2 class="hero-title">File Movement & Approval</h2>
+      <p class="hero-sub">বিভাগে ফাইল জমা দিন, বহু-স্তরের কর্মকর্তা অনুমোদন অনুসরণ করুন, আপডেট পান — সবই একটি নিরাপদ অনলাইন প্ল্যাটফর্মে।</p>
+
+      <div class="hero-cta">
+        <a class="cta-primary" href="#" id="heroLoginBtn">লগইন</a>
+      </div>
+    </div>
+
+    <div class="hero-scroll" aria-hidden="true">
+      <div class="mouse" aria-hidden="true"><div class="wheel"></div></div>
+      <div style="opacity:.95">স্ক্রল করে এক্সপ্লোর করুন</div>
+    </div>
+  </section>
+
+  <!-- MAIN PANEL -->
+  <main>
+    <section class="panel wrap" aria-labelledby="noticeHeading">
+      <div style="display:flex; gap:18px; align-items:flex-start; flex-wrap:wrap">
+        <div class="notice-left" style="flex:1 1 560px">
+          <div id="noticeHeading" class="notice-title">🛎️ নোটিফিকেশন বোর্ড</div>
+          <div class="notice-list" role="list" aria-label="site notices">
+            <div class="notice-item" role="listitem">📢 আগস্ট ৩ তারিখ সার্ভার রক্ষণাবেক্ষণ নির্ধারিত — এই সময়ে পরিষেবা সীমিত হতে পারে।</div>
+            <div class="notice-item" role="listitem">🕘 নতুন অফিসার ভূমিকা যোগ করা হয়েছে — আপনার ড্যাশবোর্ডে ভূমিকা বরাদ্দ পরীক্ষা করুন।</div>
+            <div class="notice-item" role="listitem">📎 অ্যাডমিন ও অফিসারদের জন্য বাল্ক অ্যাপ্রুভ ফিচার প্রকাশিত।</div>
+          </div>
+        </div>
+
+        <div style="padding:16px; border-radius:10px; background:#fff; border:1px solid rgba(11,23,32,0.04)">
+          <div style="font-weight:700; color:var(--accent-2); margin-bottom:6px">যোগাযোগ</div>
+          <div style="color:var(--muted); font-weight:600; font-size:14px">helpdesk@bauet.com<br/>+8801XXXXXXXXX</div>
+        </div>
+      </div>
+
+      <!-- Workflow Section -->
+      <div style="margin-top:28px;">
+        <div style="font-weight:700; color:var(--accent-2); margin-bottom:16px; font-size:22px; text-align:center;">
+          <u>কর্মপ্রবাহ</u>
+        </div>
+        <div class="features-grid" role="list">
+          <div class="feature-card" role="listitem">
+            <div style="font-size:32px; margin-bottom:12px;">🚀</div>
+            <h4>এক-ক্লিক জমাদান</h4>
+            <p>স্বয়ংক্রিয় ফরম্যাটিং এবং স্মার্ট টেমপ্লেট সুপারিশ সহ ড্রাগ-এন্ড-ড্রপ ইন্টারফেস।</p>
+          </div>
+          <div class="feature-card" role="listitem">
+            <div style="font-size:32px; margin-bottom:12px;">📍</div>
+            <h4>লাইভ অবস্থান ট্র্যাকিং</h4>
+            <p>আনুমানিক সমাপ্তি সময় এবং মাইলফলক বিজ্ঞপ্তি সহ রিয়েল-টাইম অবস্থান ট্র্যাকিং।</p>
+          </div>
+          <div class="feature-card" role="listitem">
+            <div style="font-size:32px; margin-bottom:12px;">💬</div>
+            <h4>নিরবিচ্ছিন্ন সহযোগিতা</h4>
+            <p>একীভূত কর্মক্ষেত্রে সংহত বার্তাপ্রেরণ, সংস্করণ নিয়ন্ত্রণ এবং বহু-ব্যবহারকারী সম্পাদনা।</p>
+          </div>
+          <div class="feature-card" role="listitem">
+            <div style="font-size:32px; margin-bottom:12px;">📊</div>
+            <h4>কর্মক্ষমতা বিশ্লেষণ</h4>
+            <p>প্রক্রিয়া অপ্টিমাইজেশনের অন্তর্দৃষ্টি এবং বিভাগের কর্মক্ষমতা মেট্রিক্স সহ কাস্টম ড্যাশবোর্ড।</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Question Form -->
+      <div style="padding:20px; border-radius:12px; background:#fff; border:1px solid rgba(11,23,32,0.08); margin-top: 20px;">
+        <div style="background:rgba(0,87,164,0.02); padding:16px; border-radius:8px; border:1px dashed rgba(0,87,164,0.2);">
+          <div style="font-weight:600; color:var(--accent-2); margin-bottom:10px;">কোন প্রশ্ন আছে?</div>
+          
+          <form id="supportForm" style="display:flex; flex-direction:column; gap:12px;">
+            <input type="email" placeholder="আপনার ইমেইল ঠিকানা" required
+                   style="padding:10px 12px; border:1px solid #e2e8f0; border-radius:6px; font-size:13px; font-family:inherit;">
+            
+            <select style="padding:10px 12px; border:1px solid #e2e8f0; border-radius:6px; font-size:13px; font-family:inherit; background:white;">
+              <option value="">বিভাগ নির্বাচন করুন</option>
+              <option value="technical">প্রযুক্তিগত সমস্যা</option>
+              <option value="account">অ্যাকাউন্ট সমস্যা</option>
+              <option value="feature">ফিচার অনুরোধ</option>
+              <option value="other">অন্যান্য</option>
+            </select>
+            
+            <textarea placeholder="আপনার প্রশ্ন বা সমস্যা বর্ণনা করুন..." rows="3" required
+                      style="padding:10px 12px; border:1px solid #e2e8f0; border-radius:6px; font-size:13px; font-family:inherit; resize:vertical;"></textarea>
+            
+            <button type="submit" 
+                    style="background:var(--accent); color:white; border:none; padding:10px 16px; border-radius:6px; font-weight:600; font-size:13px; cursor:pointer; transition:background 0.2s ease;">
+              প্রশ্ন জমা দিন
+            </button>
+          </form>
+          
+          <div id="formMessage" style="display:none; font-size:12px; color:var(--accent); margin-top:8px; text-align:center;"></div>
+        </div>
+      </div>
+    </section>
+
+    <footer class="site">
+      <span>&copy; ২০২৫ File Movement & Approval — ডেভেলপ করেছেন THUNDER-BOND</span>
+    </footer>
+  </main>
+
+  <script>
+    (function(){
+      // Fix slideshow - only one slide should have 'active' class
+      const slides = document.querySelectorAll('.slide');
+      let idx = 0;
+      const delay = 6000;
+      
+      function goTo(i){
+        slides.forEach((s, k) => s.classList.toggle('active', k===i));
+      }
+      
+      function next(){
+        idx = (idx + 1) % slides.length;
+        goTo(idx);
+      }
+      
+      let timer = setInterval(next, delay);
+
+      // Pause on hover
+      const hero = document.getElementById('hero');
+      hero.addEventListener('mouseenter', ()=> clearInterval(timer));
+      hero.addEventListener('mouseleave', ()=> timer = setInterval(next, delay));
+
+      // Header scroll effect
+      const header = document.getElementById('header');
+      function onScroll(){
+        const y = window.scrollY || window.pageYOffset;
+        if (y > 40) header.classList.add('scrolled'); 
+        else header.classList.remove('scrolled');
+      }
+      window.addEventListener('scroll', onScroll, {passive:true});
+      onScroll();
+
+      // Popup functionality
+      const loginPopup = document.getElementById('loginPopup');
+      const registerPopup = document.getElementById('registerPopup');
+      const loginBtn = document.getElementById('loginBtn');
+      const registerBtn = document.getElementById('registerBtn');
+      const heroLoginBtn = document.getElementById('heroLoginBtn');
+      const closeLogin = document.getElementById('closeLogin');
+      const closeRegister = document.getElementById('closeRegister');
+      const switchToRegister = document.getElementById('switchToRegister');
+      const switchToLogin = document.getElementById('switchToLogin');
+
+      function openLoginPopup() {
+        closeAllPopups();
+        loginPopup.classList.add('active');
+        document.body.style.overflow = 'hidden';
+      }
+
+      function openRegisterPopup() {
+        closeAllPopups();
+        registerPopup.classList.add('active');
+        document.body.style.overflow = 'hidden';
+      }
+
+      function closeAllPopups() {
+        loginPopup.classList.remove('active');
+        registerPopup.classList.remove('active');
+        document.body.style.overflow = '';
+      }
+
+      // Event listeners
+      loginBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        openLoginPopup();
+      });
+
+      registerBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        openRegisterPopup();
+      });
+
+      heroLoginBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        openLoginPopup();
+      });
+
+      closeLogin.addEventListener('click', closeAllPopups);
+      closeRegister.addEventListener('click', closeAllPopups);
+      
+      loginPopup.addEventListener('click', (e) => {
+        if (e.target === loginPopup) closeAllPopups();
+      });
+      
+      registerPopup.addEventListener('click', (e) => {
+        if (e.target === registerPopup) closeAllPopups();
+      });
+
+      switchToRegister.addEventListener('click', (e) => {
+        e.preventDefault();
+        closeAllPopups();
+        openRegisterPopup();
+      });
+
+      switchToLogin.addEventListener('click', (e) => {
+        e.preventDefault();
+        closeAllPopups();
+        openLoginPopup();
+      });
+
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') closeAllPopups();
+      });
+
+      // Form submissions
+      document.getElementById('loginForm').addEventListener('submit', (e) => {
+        e.preventDefault();
+        alert('লগইন কার্যকারিতা এখানে বাস্তবায়িত হবে।');
+        closeAllPopups();
+      });
+
+      document.getElementById('registerForm').addEventListener('submit', (e) => {
+        e.preventDefault();
+        alert('নিবন্ধন কার্যকারিতা এখানে বাস্তবায়িত হবে।');
+        closeAllPopups();
+      });
+
+      document.getElementById('supportForm').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const messageDiv = document.getElementById('formMessage');
+        messageDiv.textContent = 'ধন্যবাদ! আপনার প্রশ্ন আমাদের সহায়তা দলকে পাঠানো হয়েছে।';
+        messageDiv.style.display = 'block';
+        e.target.reset();
+        
+        setTimeout(() => {
+          messageDiv.style.display = 'none';
+        }, 5000);
+      });
+
+      const userType = document.getElementById("userType");
+const officerDept = document.getElementById("officerDepartmentGroup");
+const department = document.getElementById("department");
+const floorGroup = document.getElementById("floorGroup");
+
+userType.addEventListener("change", () => {
+
+  if (userType.value === "officer") {
+    officerDept.style.display = "flex";
+  } else {
+    officerDept.style.display = "none";
+    floorGroup.style.display = "none";
+    department.value = "";
+  }
+
+});
+
+department.addEventListener("change", () => {
+
+  if (department.value === "house_tutor") {
+    floorGroup.style.display = "flex";
+  } else {
+    floorGroup.style.display = "none";
+  }
+
+});
+    })();
+  </script>
+  <script type="module" src="js/auth.js"></script>
+<script type="module" src="js/testConnection.js"></script>
+</body>
+</html>
