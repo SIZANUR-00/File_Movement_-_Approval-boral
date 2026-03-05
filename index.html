@@ -646,95 +646,109 @@
     </div>
   </div>
 
-  <!-- REGISTER POPUP -->
-  <div class="popup-overlay" id="registerPopup">
-    <div class="popup-container">
-      <button class="popup-close" id="closeRegister">&times;</button>
-      
-      <div class="popup-header">
-        <h2>Create an Account</h2>
-        <p>Join our file management system</p>
-      </div>
-      
-      <form class="popup-form" id="registerForm">
-        <div class="form-row">
-          <div class="form-group">
-            <label for="firstName">First Name</label>
-            <input type="text" id="firstName" name="firstName" placeholder="Enter your first name" required>
-          </div>
-          <div class="form-group">
-            <label for="lastName">Last Name</label>
-            <input type="text" id="lastName" name="lastName" placeholder="Enter your last name" required>
-          </div>
-        </div>
-        
-        <div class="form-group">
-          <label for="email">Email Address</label>
-          <input type="email" id="email" name="email" placeholder="Enter your email address" required>
-        </div>
-        
-        <!-- USER TYPE -->
-        <div class="form-group">
-        <label for="userType">User Type</label>
-        <select id="userType" name="userType" required>
-        <option value="">Select your role</option>
-        <option value="employee">Employee</option>
-        <option value="officer">Officer</option>
-        <option value="admin">Administrator</option>
-        </select>
-        </div>
-
-        <!-- Officer Department (ONLY for officer) -->
-        <div class="form-group" id="officerDepartmentGroup" style="display:none;">
-        <label for="department">Department</label>
-        <select id="department" name="department">
-        <option value="">Select department</option>
-        <option value="register">Register</option>
-        <option value="provost">Provost</option>
-        <option value="asst_provost">Asst. Provost</option>
-        <option value="house_tutor">House Tutor</option>
-        </select>
-        </div>
-
-        <!-- Floor Selection (ONLY house tutor) -->
-        <div class="form-group" id="floorGroup" style="display:none;">
-        <label for="floor">Floor</label>
-        <select id="floor" name="floor">
-        <option value="">Select Floor</option>
-        <option value="1">Floor 1</option>
-        <option value="2">Floor 2</option>
-        <option value="3">Floor 3</option>
-        <option value="4">Floor 4</option>
-        <option value="5">Floor 5</option>
-        <option value="6">Floor 6</option>
-        </select>
-        </div>
-        
-        <div class="form-row">
-          <div class="form-group">
-            <label for="regPassword">Password</label>
-            <input type="password" id="regPassword" name="regPassword" placeholder="Create a password" required>
-          </div>
-          <div class="form-group">
-            <label for="confirmPassword">Confirm Password</label>
-            <input type="password" id="confirmPassword" name="confirmPassword" placeholder="Confirm your password" required>
-          </div>
-        </div>
-        
-        <div class="terms">
-          <input type="checkbox" id="agreeTerms" required>
-          <label for="agreeTerms">I agree to the <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a></label>
-        </div>
-        
-        <button type="submit" class="popup-button">Create Account</button>
-      </form>
-      
-      <div class="popup-footer">
-        <span>Already have an account?</span>
-        <a id="switchToLogin">Login here</a>
+  <!-- REGISTER POPUP - Department বাদ দেওয়া হয়েছে -->
+<div class="popup-overlay" id="registerPopup">
+  <div class="popup-container">
+    <button class="popup-close" id="closeRegister">&times;</button>
+    
+    <div class="popup-header">
+      <h2>Create an Account</h2>
+      <p>Join Boral Hall File Management System</p>
+      <div style="background: #fff3cd; color: #856404; padding: 10px; border-radius: 5px; margin-top: 10px; font-size: 13px;">
+        <i class="fas fa-info-circle"></i> 
+        Note: After registration, admin approval is required before you can login.
       </div>
     </div>
+    
+    <form class="popup-form" id="registerForm" onsubmit="event.preventDefault(); signup()">
+      <div class="form-row">
+        <div class="form-group">
+          <label for="firstName">First Name</label>
+          <input type="text" id="firstName" placeholder="Enter first name" required>
+        </div>
+        <div class="form-group">
+          <label for="lastName">Last Name</label>
+          <input type="text" id="lastName" placeholder="Enter last name" required>
+        </div>
+      </div>
+      
+      <div class="form-group">
+        <label for="email">Email Address</label>
+        <input type="email" id="email" placeholder="Enter your email" required>
+      </div>
+      
+      <div class="form-group">
+        <label for="userType">User Type</label>
+        <select id="userType" required onchange="toggleFloorField()">
+          <option value="">Select your role</option>
+          <option value="supervisor">Supervisor</option>
+          <option value="house_tutor">House Tutor</option>
+          <option value="assistant_provost">Assistant Provost</option>
+          <option value="provost">Provost</option>
+          <option value="treasurer">Treasurer</option>
+          <option value="vc">Vice Chancellor</option>
+          <option value="admin">Administrator</option>
+        </select>
+      </div>
+
+      <!-- Floor Selection (শুধু House Tutor এর জন্য) -->
+      <div class="form-group" id="floorGroup" style="display:none;">
+        <label for="floor">Select Your Floor <span style="color: #e74c3c;">*</span></label>
+        <select id="floor">
+          <option value="">-- Choose Floor --</option>
+          <option value="Ground">Ground Floor</option>
+          <option value="1">1st Floor</option>
+          <option value="2">2nd Floor</option>
+          <option value="3">3rd Floor</option>
+          <option value="4">4th Floor</option>
+          <option value="5">5th Floor</option>
+        </select>
+        <small style="color: #666; display: block; margin-top: 5px;">
+          <i class="fas fa-info-circle"></i> Each floor can have only one House Tutor
+        </small>
+      </div>
+      
+      <div class="form-row">
+        <div class="form-group">
+          <label for="regPassword">Password</label>
+          <input type="password" id="regPassword" placeholder="Create a password" required>
+        </div>
+        <div class="form-group">
+          <label for="confirmPassword">Confirm Password</label>
+          <input type="password" id="confirmPassword" placeholder="Confirm password" required>
+        </div>
+      </div>
+      
+      <div class="terms">
+        <input type="checkbox" id="agreeTerms" required>
+        <label for="agreeTerms">I agree to the <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a></label>
+      </div>
+      
+      <button type="submit" class="popup-button">Create Account</button>
+    </form>
+    
+    <div class="popup-footer">
+      <span>Already have an account?</span>
+      <a id="switchToLogin">Login here</a>
+    </div>
   </div>
+</div>
+
+<script>
+// ফ্লোর ফিল্ড টগল করার ফাংশন (Department বাদ)
+function toggleFloorField() {
+  const userType = document.getElementById('userType').value;
+  const floorGroup = document.getElementById('floorGroup');
+  
+  if (userType === 'house_tutor') {
+    floorGroup.style.display = 'block';
+    document.getElementById('floor').required = true;
+  } else {
+    floorGroup.style.display = 'none';
+    document.getElementById('floor').required = false;
+  }
+}
+</script>
 
   <!-- HERO (slideshow) -->
   <section class="hero" id="hero">

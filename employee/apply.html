@@ -369,22 +369,44 @@
         <div class="role-section">
           <div class="role-title">
             <i class="fas fa-user-tie"></i>
-            Select Approval Roles (Sequential Order)
+            Select Approving Officers (Fixed Order)
           </div>
           
-          <!-- Roles Container -->
-          <div id="rolesContainer">
-            <div class="role-wrapper">
-              <select name="role[]" class="role-select" onchange="handleRoleChange(this, 1)" required>
-                <option value="">-- Select Role 1 --</option>
-                <option value="house-tutor">House Tutor</option>
-                <option value="assistant-provost">Assistant Provost</option>
-                <option value="provost">Provost</option>
-                <option value="treasurer">Treasurer</option>
-                <option value="vc">Vice Chancellor</option>
-              </select>
-            </div>
+          <div class="form-group">
+            <label for="house_tutor_id">1. House Tutor *</label>
+            <select id="house_tutor_id" required>
+              <option value="">Select House Tutor</option>
+            </select>
           </div>
+
+          <div class="form-group">
+            <label for="assistant_provost_id">2. Assistant Provost *</label>
+            <select id="assistant_provost_id" required>
+              <option value="">Select Assistant Provost</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="provost_id">3. Provost *</label>
+            <select id="provost_id" required>
+              <option value="">Select Provost</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="treasurer_id">4. Treasurer *</label>
+            <select id="treasurer_id" required>
+              <option value="">Select Treasurer</option>
+            </select>
+          </div>
+
+  <div class="form-group">
+    <label for="vc_id">5. Vice Chancellor *</label>
+    <select id="vc_id" required>
+      <option value="">Select Vice Chancellor</option>
+    </select>
+  </div>
+</div>
 
           <!-- Add Next Role Button -->
           <button type="button" class="add-role-btn" id="addRoleBtn" onclick="addNextRole()">
@@ -395,6 +417,116 @@
         <button type="submit" class="submit-btn">Submit Application</button>
       </form>
     </div>
+
+    <!-- Role Selection Section - Dynamic Order -->
+<div class="role-section">
+  <div class="role-title">
+    <i class="fas fa-sitemap"></i>
+    Define Your Approval Flow (Set the Order)
+  </div>
+  
+  <div style="background: #e8f4fd; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+    <p style="color: var(--accent-2); font-weight: 600; margin-bottom: 5px;">
+      <i class="fas fa-info-circle"></i> How it works:
+    </p>
+    <p style="font-size: 0.9rem;">
+      আপনি নিচে যেভাবে অফিসারদের সাজাবেন, ফাইল সেভাবেই একের পর এক এপ্রুভ হতে যাবে।
+    </p>
+  </div>
+  
+  <!-- Dynamic Approval Steps Container -->
+  <div id="approvalStepsContainer">
+    <div class="approval-step-item" data-step="1">
+      <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+        <span style="background: var(--accent-2); color: white; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold;">1</span>
+        <h4 style="margin: 0; color: var(--accent-2);">First Approver</h4>
+      </div>
+      <div style="display: flex; gap: 10px;">
+        <select class="role-select" id="role_1" onchange="handleRoleChange(1)" required style="flex: 2; padding: 12px; border: 2px solid var(--accent-2); border-radius: 8px;">
+          <option value="">-- Select Role --</option>
+          <option value="house_tutor">House Tutor</option>
+          <option value="assistant_provost">Assistant Provost</option>
+          <option value="provost">Provost</option>
+          <option value="treasurer">Treasurer</option>
+          <option value="vc">Vice Chancellor</option>
+        </select>
+        
+        <select class="officer-select" id="officer_1" style="flex: 3; padding: 12px; border: 2px solid var(--accent-2); border-radius: 8px;" disabled required>
+          <option value="">-- First Select Role --</option>
+        </select>
+        
+        <button type="button" class="remove-btn" onclick="removeStep(1)" style="display: none;">
+          <i class="fas fa-trash"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Add Step Button -->
+  <button type="button" class="add-role-btn" id="addStepBtn" onclick="addApprovalStep()">
+    <i class="fas fa-plus-circle"></i> Add Next Approver
+  </button>
+  
+  <!-- Summary -->
+  <div style="background: #e8f4fd; padding: 15px; border-radius: 8px; margin-top: 20px;">
+    <p style="color: var(--accent-2); font-weight: 600;">
+      <i class="fas fa-check-circle"></i> Your Approval Flow:
+    </p>
+    <p id="selectedPath" style="font-size: 1rem; color: #333; font-weight: 500;">
+      <span style="color: #999;">No approvers selected yet</span>
+    </p>
+  </div>
+</div>
+
+<style>
+  .approval-step-item {
+    background: #f9f9f9;
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 15px;
+    border-left: 4px solid var(--accent-2);
+    transition: all 0.3s ease;
+  }
+  
+  .approval-step-item:hover {
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+  }
+  
+  .remove-btn {
+    background: #e74c3c;
+    color: white;
+    border: none;
+    padding: 0 15px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.3s ease;
+  }
+  
+  .remove-btn:hover {
+    background: #c0392b;
+    transform: translateY(-2px);
+  }
+  
+  .add-role-btn {
+    background: var(--green);
+    color: #000;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 1rem;
+    margin: 10px 0;
+    transition: all 0.3s ease;
+    width: 100%;
+  }
+  
+  .add-role-btn:hover {
+    background: #2ecc71;
+    transform: translateY(-2px);
+  }
+</style>
   </main>
 
   <footer>
@@ -614,6 +746,277 @@
       window.location.href = 'e_dashboard.html';
     });
   </script>
+  <script>
+  // Store all available officers by role
+  let officersByRole = {
+    house_tutor: [],
+    assistant_provost: [],
+    provost: [],
+    treasurer: [],
+    vc: []
+  };
+  
+  let stepCounter = 1;
+  let selectedRoles = []; // Track which roles are already selected
+  
+  // Load all officers from database
+  async function loadAllOfficers() {
+    try {
+      // Load House Tutors (with floor)
+      const { data: houseTutors } = await supabase
+        .from('profiles')
+        .select('id, name, floor')
+        .eq('role', 'house_tutor')
+        .order('floor');
+      
+      officersByRole.house_tutor = houseTutors || [];
+      
+      // Load Assistant Provosts
+      const { data: asstProvosts } = await supabase
+        .from('profiles')
+        .select('id, name')
+        .eq('role', 'assistant_provost');
+      
+      officersByRole.assistant_provost = asstProvosts || [];
+      
+      // Load Provosts
+      const { data: provosts } = await supabase
+        .from('profiles')
+        .select('id, name')
+        .eq('role', 'provost');
+      
+      officersByRole.provost = provosts || [];
+      
+      // Load Treasurers
+      const { data: treasurers } = await supabase
+        .from('profiles')
+        .select('id, name')
+        .eq('role', 'treasurer');
+      
+      officersByRole.treasurer = treasurers || [];
+      
+      // Load VCs
+      const { data: vcs } = await supabase
+        .from('profiles')
+        .select('id, name')
+        .eq('role', 'vc');
+      
+      officersByRole.vc = vcs || [];
+      
+      console.log('Officers loaded:', officersByRole);
+      
+    } catch (error) {
+      console.error('Error loading officers:', error);
+    }
+  }
+  
+  // Handle role selection change
+  window.handleRoleChange = function(stepNumber) {
+    const roleSelect = document.getElementById(`role_${stepNumber}`);
+    const officerSelect = document.getElementById(`officer_${stepNumber}`);
+    const selectedRole = roleSelect.value;
+    
+    // Clear and enable officer select
+    officerSelect.innerHTML = '<option value="">-- Select Officer --</option>';
+    officerSelect.disabled = !selectedRole;
+    
+    if (!selectedRole) return;
+    
+    // Check if this role was already selected in another step
+    if (selectedRoles.includes(selectedRole) && selectedRoles.indexOf(selectedRole) !== stepNumber - 1) {
+      alert(`You've already selected ${getRoleName(selectedRole)} in another step. Each role can only be used once.`);
+      roleSelect.value = '';
+      officerSelect.disabled = true;
+      return;
+    }
+    
+    // Update selectedRoles array
+    selectedRoles[stepNumber - 1] = selectedRole;
+    
+    // Populate officer dropdown
+    const officers = officersByRole[selectedRole] || [];
+    
+    if (officers.length === 0) {
+      officerSelect.innerHTML = '<option value="">-- No officers available --</option>';
+      return;
+    }
+    
+    officers.forEach(officer => {
+      const option = document.createElement('option');
+      option.value = officer.id;
+      
+      if (selectedRole === 'house_tutor') {
+        option.textContent = `${officer.name} (Floor: ${officer.floor || 'Ground'})`;
+      } else {
+        option.textContent = officer.name;
+      }
+      
+      officerSelect.appendChild(option);
+    });
+    
+    updatePathSummary();
+  };
+  
+  // Add new approval step
+  window.addApprovalStep = function() {
+    stepCounter++;
+    const container = document.getElementById('approvalStepsContainer');
+    
+    const stepHtml = `
+      <div class="approval-step-item" data-step="${stepCounter}">
+        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+          <span style="background: var(--accent-2); color: white; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold;">${stepCounter}</span>
+          <h4 style="margin: 0; color: var(--accent-2);">Approver #${stepCounter}</h4>
+        </div>
+        <div style="display: flex; gap: 10px;">
+          <select class="role-select" id="role_${stepCounter}" onchange="handleRoleChange(${stepCounter})" required style="flex: 2; padding: 12px; border: 2px solid var(--accent-2); border-radius: 8px;">
+            <option value="">-- Select Role --</option>
+            <option value="house_tutor">House Tutor</option>
+            <option value="assistant_provost">Assistant Provost</option>
+            <option value="provost">Provost</option>
+            <option value="treasurer">Treasurer</option>
+            <option value="vc">Vice Chancellor</option>
+          </select>
+          
+          <select class="officer-select" id="officer_${stepCounter}" style="flex: 3; padding: 12px; border: 2px solid var(--accent-2); border-radius: 8px;" disabled required>
+            <option value="">-- First Select Role --</option>
+          </select>
+          
+          <button type="button" class="remove-btn" onclick="removeStep(${stepCounter})">
+            <i class="fas fa-trash"></i>
+          </button>
+        </div>
+      </div>
+    `;
+    
+    container.insertAdjacentHTML('beforeend', stepHtml);
+    updatePathSummary();
+  };
+  
+  // Remove approval step
+  window.removeStep = function(stepNumber) {
+    const stepElement = document.querySelector(`.approval-step-item[data-step="${stepNumber}"]`);
+    if (stepElement) {
+      // Remove from selectedRoles array
+      selectedRoles[stepNumber - 1] = null;
+      stepElement.remove();
+      
+      // Renumber remaining steps
+      const remainingSteps = document.querySelectorAll('.approval-step-item');
+      remainingSteps.forEach((step, index) => {
+        const newStepNum = index + 1;
+        step.setAttribute('data-step', newStepNum);
+        
+        // Update step number display
+        step.querySelector('span').textContent = newStepNum;
+        step.querySelector('h4').textContent = `Approver #${newStepNum}`;
+        
+        // Update IDs
+        const roleSelect = step.querySelector('.role-select');
+        roleSelect.id = `role_${newStepNum}`;
+        roleSelect.setAttribute('onchange', `handleRoleChange(${newStepNum})`);
+        
+        const officerSelect = step.querySelector('.officer-select');
+        officerSelect.id = `officer_${newStepNum}`;
+        
+        const removeBtn = step.querySelector('.remove-btn');
+        removeBtn.setAttribute('onclick', `removeStep(${newStepNum})`);
+      });
+      
+      stepCounter = remainingSteps.length;
+      updatePathSummary();
+    }
+  };
+  
+  // Helper: Get role name in Bengali/English
+  function getRoleName(role) {
+    const names = {
+      'house_tutor': 'House Tutor',
+      'assistant_provost': 'Assistant Provost',
+      'provost': 'Provost',
+      'treasurer': 'Treasurer',
+      'vc': 'Vice Chancellor'
+    };
+    return names[role] || role;
+  }
+  
+  // Update the summary path
+  function updatePathSummary() {
+    const steps = document.querySelectorAll('.approval-step-item');
+    let pathHtml = '';
+    
+    steps.forEach((step, index) => {
+      const stepNum = index + 1;
+      const roleSelect = document.getElementById(`role_${stepNum}`);
+      const officerSelect = document.getElementById(`officer_${stepNum}`);
+      
+      if (roleSelect && roleSelect.value) {
+        const roleName = getRoleName(roleSelect.value);
+        const officerName = officerSelect?.selectedOptions[0]?.text || 'Not selected';
+        
+        pathHtml += `<span style="background: var(--accent-2); color: white; padding: 5px 10px; border-radius: 20px; margin: 0 5px;">${roleName}</span>`;
+        
+        if (index < steps.length - 1) {
+          pathHtml += ` <span style="font-size: 20px; color: var(--accent-2);">→</span> `;
+        }
+      }
+    });
+    
+    if (!pathHtml) {
+      pathHtml = '<span style="color: #999;">No approvers selected yet</span>';
+    }
+    
+    document.getElementById('selectedPath').innerHTML = pathHtml;
+  }
+  
+  // Form submission
+  document.getElementById('applicationForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    // Collect all steps
+    const steps = document.querySelectorAll('.approval-step-item');
+    
+    if (steps.length === 0) {
+      alert('Please add at least one approver');
+      return;
+    }
+    
+    const approvals = [];
+    let isValid = true;
+    
+    steps.forEach((step, index) => {
+      const stepNum = index + 1;
+      const roleSelect = document.getElementById(`role_${stepNum}`);
+      const officerSelect = document.getElementById(`officer_${stepNum}`);
+      
+      if (!roleSelect.value || !officerSelect.value) {
+        alert(`Please select both role and officer for step ${stepNum}`);
+        isValid = false;
+        return;
+      }
+      
+      approvals.push({
+        role: roleSelect.value,
+        officer_id: officerSelect.value,
+        step_order: stepNum
+      });
+    });
+    
+    if (!isValid) return;
+    
+    console.log('Approval flow:', approvals);
+    
+    // এখানে আপনার existing submission code চালাবে
+    // যেখানে approvals array অনুযায়ী application_approvals table এ insert করবে
+    
+    alert('File submitted with custom approval flow!');
+  });
+  
+  // Initialize on page load
+  document.addEventListener('DOMContentLoaded', async () => {
+    await loadAllOfficers();
+  });
+</script>
   <script type="module" src="../js/apply.js"></script>
 </body>
 </html>

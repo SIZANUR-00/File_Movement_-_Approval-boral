@@ -1,15 +1,18 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Admin Dashboard | File Movement & Approval System</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Assistant Provost Dashboard | File Movement & Approval System</title>
 
-  <!-- Fonts & Icons -->
+  <!-- Fonts -->
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  
+  <!-- Font Awesome 6 -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
   <style>
+    /* Same styles as house_tutor_dashboard */
     :root {
       --accent:#282424;
       --accent-2:#3f8fd5;
@@ -27,7 +30,6 @@
       min-height:100vh;
     }
 
-    /* ---------- HEADER ---------- */
     header.topbar{
       position:fixed;top:0;left:0;right:0;z-index:60;
       display:flex;justify-content:center;pointer-events:none;
@@ -51,7 +53,6 @@
     }
     .brand .logo img{width:100%;height:100%;object-fit:contain}
     .brand h1{color:#b29315;font-size:1.1rem;font-weight:600;text-shadow:0 2px 8px rgba(62, 8, 8, 0.35)}
-    .brand small{display:block;font-size:0.8rem;color:rgba(255,255,255,0.8)}
 
     .user-area{
       display:flex;
@@ -96,7 +97,6 @@
       transform:translateY(-2px);
     }
 
-    /* Role Switcher Styles */
     .role-switcher {
       margin-left: 15px;
     }
@@ -121,11 +121,10 @@
       background: rgba(255,255,255,0.3);
     }
 
-    /* ---------- HERO SLIDES ---------- */
     .hero{
       position:relative;
-      height:55vh;
-      min-height:480px;
+      height:40vh;
+      min-height:300px;
       display:flex;
       align-items:center;
       justify-content:center;
@@ -167,7 +166,6 @@
       text-shadow: 0 1px 5px rgba(0,0,0,0.4);
     }
 
-    /* ---------- MAIN DASHBOARD ---------- */
     main{
       max-width:var(--container-width);
       margin:0 auto;
@@ -188,8 +186,6 @@
       text-align:center;
       box-shadow:0 10px 40px rgba(0,0,0,0.05);
       transition:transform 0.3s ease, box-shadow 0.3s ease;
-      position: relative;
-      overflow: hidden;
     }
     .card:hover{
       transform:translateY(-8px);
@@ -222,39 +218,6 @@
     }
     .btn-link:hover{background:#1e6fb0;transform:translateY(-2px)}
 
-    /* Special styling for the Admin card */
-    .admin-card {
-      position: relative;
-      background: linear-gradient(135deg, rgba(63, 143, 213, 0.9), rgba(0, 87, 164, 0.9));
-      color: #fff;
-      overflow: hidden;
-    }
-    .admin-card::before {
-      content: "";
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: url('../image/bauet-logo2.png') center/contain no-repeat;
-      opacity: 0.1;
-      z-index: 0;
-    }
-    .admin-card > * {
-      position: relative;
-      z-index: 1;
-    }
-    .admin-card i {
-      color: #ffce00;
-    }
-    .admin-card h3 {
-      color: #fff;
-    }
-    .admin-card p {
-      color: #f6f6f6;
-    }
-
-    /* ---------- FOOTER ---------- */
     footer{
       text-align:center;
       color:var(--muted);
@@ -265,7 +228,6 @@
 
     @media (max-width:768px){
       .brand h1{font-size:1rem}
-      .brand small{display:none}
       .hero-inner h2{font-size:1.8rem}
       .cards-row{grid-template-columns:1fr}
       .user-area{flex-wrap:wrap;justify-content:flex-end}
@@ -274,7 +236,6 @@
 </head>
 
 <body>
-  <!-- HEADER -->
   <header class="topbar">
     <div class="bar">
       <div class="brand">
@@ -282,8 +243,7 @@
           <img src="../image/bauet-logo2.png" alt="BAUET Logo">
         </div>
         <div>
-          <h1>File Movement & Approval</h1>
-          <small>Admin Panel</small>
+          <h1>Assistant Provost Dashboard</h1>
         </div>
       </div>
 
@@ -291,10 +251,9 @@
         <div class="user-info">
           <i class="fas fa-user-circle fa-2x"></i>
           <span id="userName">Loading...</span>
-          <span class="role-badge">Admin</span>
+          <span class="role-badge" id="userRoleBadge">Asst. Provost</span>
         </div>
         
-        <!-- Role Switcher Container - এখানে Role Switcher বসবে -->
         <div id="roleSwitcherContainer"></div>
         
         <button class="logout-btn" onclick="logout()">
@@ -304,7 +263,6 @@
     </div>
   </header>
 
-  <!-- HERO SLIDES -->
   <section class="hero" id="hero">
     <div class="slides" id="slides">
       <div class="slide active" style="background-image:url('../image/BAUET-Campus.jpg')"></div>
@@ -314,57 +272,38 @@
     </div>
 
     <div class="hero-inner">
-      <h2>Welcome back, Admin!</h2>
-      <p>Manage users, notices, and track file approvals — all in one place.</p>
+      <h2>Welcome, <span id="welcomeName">Assistant Provost</span>!</h2>
+      <p>Review applications forwarded by House Tutors.</p>
     </div>
   </section>
 
-  <!-- MAIN CONTENT -->
   <main>
-    <!-- Admin Panel Card -->
-    <div class="cards-row" style="grid-template-columns:1fr;">
-      <div class="card admin-card">
-        <i class="fas fa-tools"></i>
-        <h3>Admin Panel</h3>
-        <p>Manage all aspects of the file movement and approval system.</p>
-      </div>
-    </div>
-
-    <!-- Other Cards -->
     <div class="cards-row">
       <div class="card">
-        <i class="fas fa-users"></i>
-        <h3>Manage Users</h3>
-        <p>Add, edit, or remove users from the system.</p>
-        <a href="manage_users.html" class="btn-link">Manage Users</a>
-      </div>
-      
-      <div class="card">
-        <i class="fas fa-user-check"></i>
-        <h3>Approve Users</h3>
-        <p>Approve or reject new user registrations.</p>
-        <a href="approve_users.html" class="btn-link">Approve Users</a>
-      </div>
-
-      <div class="card">
-        <i class="fas fa-bullhorn"></i>
-        <h3>Post Notice</h3>
-        <p>Create and publish notices for all users.</p>
-        <a href="post_notice.html" class="btn-link">Post Notice</a>
-      </div>
-
-      <div class="card">
         <i class="fas fa-clock"></i>
-        <h3>Pending Files</h3>
-        <p>Review and process pending file requests.</p>
-        <a href="pending_files.html" class="btn-link">Pending Files</a>
+        <h3>Pending Applications</h3>
+        <span style="font-size: 2rem; color: var(--accent-2);" id="pendingCount">0</span>
       </div>
 
       <div class="card">
         <i class="fas fa-check-circle"></i>
-        <h3>Approved Files</h3>
-        <p>View all approved file applications.</p>
-        <a href="approved_files.html" class="btn-link">Approved Files</a>
+        <h3>Approved</h3>
+        <span style="font-size: 2rem; color: var(--accent-2);" id="approvedCount">0</span>
+      </div>
+
+      <div class="card">
+        <i class="fas fa-hourglass-half"></i>
+        <h3>From House Tutor</h3>
+        <span style="font-size: 2rem; color: var(--accent-2);" id="fromTutorCount">0</span>
+      </div>
+    </div>
+
+    <div class="cards-row" style="grid-template-columns:1fr;">
+      <div class="card">
+        <h3><i class="fas fa-inbox"></i> Applications to Review</h3>
+        <div style="margin-top: 20px;" id="applicationsList">
+          <p>Loading applications...</p>
+        </div>
       </div>
     </div>
   </main>
@@ -374,7 +313,6 @@
   </footer>
 
   <script>
-    // Slideshow transition
     const slides = document.querySelectorAll('.slide');
     let idx = 0;
     setInterval(() => {
@@ -384,38 +322,73 @@
     }, 5000);
   </script>
   
-  <!-- Main Scripts -->
   <script type="module">
-  import { initRoleSwitcher } from '../js/components/RoleSwitcher.js';
-  import { supabase } from '../js/supabase.js';
-  
-  async function loadUserData() {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        window.location.href = '../index.html';
-        return;
+    import { initRoleSwitcher } from '../js/components/RoleSwitcher.js';
+    import { supabase } from '../js/supabase.js';
+    
+    async function loadUserData() {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) {
+          window.location.href = '../index.html';
+          return;
+        }
+        
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('name, role')
+          .eq('id', user.id)
+          .single();
+        
+        document.getElementById('userName').textContent = profile?.name || 'User';
+        document.getElementById('welcomeName').textContent = profile?.name?.split(' ')[0] || 'Assistant Provost';
+        
+        const roleBadge = document.getElementById('userRoleBadge');
+        if (roleBadge) {
+          roleBadge.textContent = 'Asst. Provost';
+        }
+
+        await loadApplications();
+
+      } catch (error) {
+        console.error('Error:', error);
       }
-      
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('name')
-        .eq('id', user.id)
-        .single();
-      
-      document.getElementById('userName').textContent = profile?.name || 'Admin';
-    } catch (error) {
-      console.error('Error loading user data:', error);
-      document.getElementById('userName').textContent = 'Admin';
     }
-  }
-  
-  // Role Switcher initialize করুন
-  await initRoleSwitcher();
-  
-  // ইউজার ডাটা লোড করুন
-  await loadUserData();
-</script>
+
+    async function loadApplications() {
+      try {
+        const { data: applications } = await supabase
+          .from('files')
+          .select('*')
+          .eq('current_step', 'assistant_provost')
+          .eq('status', 'pending');
+
+        document.getElementById('pendingCount').textContent = applications?.length || 0;
+        document.getElementById('fromTutorCount').textContent = applications?.length || 0;
+
+        const listDiv = document.getElementById('applicationsList');
+        if (!applications || applications.length === 0) {
+          listDiv.innerHTML = '<p>No pending applications</p>';
+        } else {
+          listDiv.innerHTML = applications.map(app => `
+            <div style="border-bottom:1px solid #eee; padding:10px; display:flex; justify-content:space-between;">
+              <span>${app.title}</span>
+              <button class="btn-link" style="padding:5px 10px;" onclick="viewApplication('${app.id}')">Review</button>
+            </div>
+          `).join('');
+        }
+      } catch (error) {
+        console.error('Error loading applications:', error);
+      }
+    }
+
+    window.viewApplication = function(id) {
+      window.location.href = `view_file_details.html?id=${id}`;
+    };
+    
+    await initRoleSwitcher();
+    await loadUserData();
+  </script>
   
   <script type="module" src="../js/auth.js"></script>
 </body>

@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Approve Users - Admin</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <style>
+    :root {
+      --accent:#282424;
+      --accent-2:#3f8fd5;
+      --muted:#243557;
+      --gold:#ffce00;
+      --green:#3cdd77bd;
+      --red:#e74c3c;
+    }
+    
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Poppins', sans-serif;
+    }
+    
+    body {
+      background: #f6f7fb;
+      padding: 20px;
+    }
+    
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    
+    h1 {
+      color: var(--accent-2);
+      margin: 30px 0;
+    }
+    
+    table {
+      width: 100%;
+      background: white;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+    }
+    
+    th {
+      background: var(--accent-2);
+      color: white;
+      padding: 15px;
+      text-align: left;
+    }
+    
+    td {
+      padding: 15px;
+      border-bottom: 1px solid #e2e8f0;
+    }
+    
+    .status-badge {
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+    
+    .status-pending {
+      background: #fff3cd;
+      color: #856404;
+    }
+    
+    .status-approved {
+      background: #d4edda;
+      color: #155724;
+    }
+    
+    .status-rejected {
+      background: #f8d7da;
+      color: #721c24;
+    }
+    
+    .btn-approve {
+      background: var(--green);
+      color: #000;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      margin-right: 5px;
+      font-weight: 600;
+      font-size: 0.85rem;
+    }
+    
+    .btn-reject {
+      background: var(--red);
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      margin-right: 5px;
+      font-weight: 600;
+      font-size: 0.85rem;
+    }
+    
+    .btn-delete {
+      background: #c0392b;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 0.85rem;
+      transition: all 0.3s ease;
+    }
+    
+    .btn-delete:hover {
+      background: #a93226;
+      transform: translateY(-2px);
+    }
+    
+    .btn-back {
+      background: var(--accent-2);
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 6px;
+      cursor: pointer;
+      margin-bottom: 20px;
+      text-decoration: none;
+      display: inline-block;
+    }
+
+    .filter-section {
+      margin-bottom: 20px;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .filter-select {
+      padding: 8px 12px;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      font-family: inherit;
+      min-width: 150px;
+    }
+
+    .add-user-btn {
+      background: var(--accent-2);
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+      margin-bottom: 20px;
+    }
+
+    .add-user-btn:hover {
+      background: #1e6fb0;
+    }
+    
+    .action-group {
+      display: flex;
+      gap: 5px;
+      flex-wrap: wrap;
+    }
+    
+    .warning-text {
+      color: var(--red);
+      font-size: 0.8rem;
+      margin-top: 5px;
+    }
+    .btn-edit {
+  background: #f39c12;
+  color: white;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.85rem;
+  transition: all 0.3s ease;
+}
+
+.btn-edit:hover {
+  background: #e67e22;
+  transform: translateY(-2px);
+}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <a href="a_dashboard.html" class="btn-back"><i class="fas fa-arrow-left"></i> Back to Dashboard</a>
+    
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;">
+      <h1><i class="fas fa-user-check"></i> Manage Users</h1>
+      <button class="add-user-btn" onclick="openAddUserModal()">
+        <i class="fas fa-user-plus"></i> Add New User
+      </button>
+    </div>
+
+    <div class="filter-section">
+      <select class="filter-select" id="roleFilter">
+        <option value="all">All Roles</option>
+        <option value="supervisor">Supervisor</option>
+        <option value="house_tutor">House Tutor</option>
+        <option value="assistant_provost">Assistant Provost</option>
+        <option value="provost">Provost</option>
+        <option value="treasurer">Treasurer</option>
+        <option value="vc">Vice Chancellor</option>
+        <option value="admin">Admin</option>
+      </select>
+      
+      <select class="filter-select" id="statusFilter">
+        <option value="all">All Status</option>
+        <option value="pending">Pending</option>
+        <option value="approved">Approved</option>
+        <option value="rejected">Rejected</option>
+      </select>
+    </div>
+    
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Email</th>
+          <th>Role</th>
+          <th>Floor</th>
+          <th>Registered</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="usersTableBody">
+        <tr>
+          <td colspan="7" style="text-align: center;">Loading users...</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Add User Modal -->
+  <!-- Add User Modal - Role selection স্পষ্ট করা -->
+<div id="addUserModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000;">
+  <div style="background: white; max-width: 500px; margin: 100px auto; padding: 30px; border-radius: 10px;">
+    <h2 style="color: var(--accent-2); margin-bottom: 20px;">Add New User</h2>
+    
+    <div style="margin-bottom: 15px;">
+      <label style="display: block; margin-bottom: 5px; font-weight: 600;">Full Name</label>
+      <input type="text" id="newName" placeholder="Enter Your Name" style="width: 100%; padding: 10px; border: 1px solid #e2e8f0; border-radius: 5px;">
+    </div>
+    
+    <div style="margin-bottom: 15px;">
+      <label style="display: block; margin-bottom: 5px; font-weight: 600;">Email</label>
+      <input type="email" id="newEmail" placeholder="Which is use to Login" style="width: 100%; padding: 10px; border: 1px solid #e2e8f0; border-radius: 5px;">
+    </div>
+    
+    <div style="margin-bottom: 15px;">
+      <label style="display: block; margin-bottom: 5px; font-weight: 600;">Password</label>
+      <input type="password" id="newPassword" placeholder="••••••••" style="width: 100%; padding: 10px; border: 1px solid #e2e8f0; border-radius: 5px;">
+    </div>
+    
+    <div style="margin-bottom: 15px;">
+      <label style="display: block; margin-bottom: 5px; font-weight: 600;">Select Role</label>
+      <select id="newRole" style="width: 100%; padding: 10px; border: 1px solid #e2e8f0; border-radius: 5px;" onchange="toggleNewFloorField()">
+        <option value="supervisor">👤 Supervisor (Can submit files)</option>
+        <option value="house_tutor">🏠 House Tutor (Floor in-charge)</option>
+        <option value="assistant_provost">👔 Assistant Provost</option>
+        <option value="provost">👑 Provost</option>
+        <option value="treasurer">💰 Treasurer</option>
+        <option value="vc">🎓 Vice Chancellor</option>
+        <option value="admin">⚙️ Admin</option>
+      </select>
+      <small style="color: #666; display: block; margin-top: 5px;">
+        <i class="fas fa-info-circle"></i> Each role has different permissions
+      </small>
+    </div>
+    
+    <div style="margin-bottom: 15px; display: none;" id="newFloorGroup">
+      <label style="display: block; margin-bottom: 5px; font-weight: 600;">Select Floor (for House Tutor)</label>
+      <select id="newFloor" style="width: 100%; padding: 10px; border: 1px solid #e2e8f0; border-radius: 5px;">
+        <option value="">-- Choose Floor --</option>
+        <option value="Ground">Ground Floor</option>
+        <option value="1">1st Floor</option>
+        <option value="2">2nd Floor</option>
+        <option value="3">3rd Floor</option>
+        <option value="4">4th Floor</option>
+        <option value="5">5th Floor</option>
+      </select>
+    </div>
+    
+    <div style="display: flex; gap: 10px; justify-content: flex-end;">
+      <button onclick="closeAddUserModal()" style="padding: 10px 20px; background: #95a5a6; color: white; border: none; border-radius: 5px; cursor: pointer;">Cancel</button>
+      <button onclick="addNewUser()" style="padding: 10px 20px; background: var(--accent-2); color: white; border: none; border-radius: 5px; cursor: pointer;">Create User</button>
+    </div>
+  </div>
+</div>
+
+  <!-- Delete Confirmation Modal -->
+  <div id="deleteModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000;">
+    <div style="background: white; max-width: 400px; margin: 200px auto; padding: 30px; border-radius: 10px; text-align: center;">
+      <i class="fas fa-exclamation-triangle" style="font-size: 48px; color: var(--red); margin-bottom: 20px;"></i>
+      <h2 style="color: var(--red); margin-bottom: 15px;">Confirm Delete</h2>
+      <p style="margin-bottom: 20px;" id="deleteMessage">Are you sure you want to delete this user?</p>
+      <div style="display: flex; gap: 10px; justify-content: center;">
+        <button onclick="confirmDelete()" style="padding: 10px 30px; background: var(--red); color: white; border: none; border-radius: 5px; cursor: pointer;">Delete</button>
+        <button onclick="closeDeleteModal()" style="padding: 10px 30px; background: #95a5a6; color: white; border: none; border-radius: 5px; cursor: pointer;">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+<script type="module">
+  import { supabase } from '../js/supabase.js';
+
+  let allUsers = [];
+  let userToDelete = null;
+
+  // Check if admin
+  async function checkAdmin() {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      window.location.href = '../index.html';
+      return;
+    }
+
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single();
+
+    if (profile?.role !== 'admin') {
+      window.location.href = '../index.html';
+    }
+  }
+
+  // Load all users
+  async function loadUsers() {
+    try {
+      let query = supabase
+        .from('profiles')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      const statusFilter = document.getElementById('statusFilter').value;
+      if (statusFilter !== 'all') {
+        query = query.eq('approval_status', statusFilter);
+      }
+
+      const { data: users, error } = await query;
+
+      if (error) throw error;
+
+      allUsers = users || [];
+      filterByRole();
+    } catch (error) {
+      console.error('Error loading users:', error);
+      document.getElementById('usersTableBody').innerHTML = '<tr><td colspan="7" style="text-align: center; color: red;">Error loading users</td></tr>';
+    }
+  }
+  let editingUserId = null;
+
+// Edit Role Modal খোলা
+window.openEditRoleModal = function(userId, currentRole) {
+  editingUserId = userId;
+  document.getElementById('newRoleSelect').value = currentRole;
+  document.getElementById('editRoleModal').style.display = 'block';
+};
+
+// Edit Role Modal বন্ধ করা
+window.closeEditRoleModal = function() {
+  document.getElementById('editRoleModal').style.display = 'none';
+  editingUserId = null;
+};
+
+// রোল পরিবর্তন কনফার্ম করা
+window.confirmRoleChange = async function() {
+  if (!editingUserId) return;
+  
+  const newRole = document.getElementById('newRoleSelect').value;
+  
+  try {
+    const { error } = await supabase
+      .from('profiles')
+      .update({ 
+        role: newRole,
+        updated_at: new Date()
+      })
+      .eq('id', editingUserId);
+
+    if (error) throw error;
+    
+    alert(`✅ Role updated to ${newRole} successfully!`);
+    closeEditRoleModal();
+    loadUsers();
+    
+  } catch (error) {
+    alert('Error updating role: ' + error.message);
+  }
+};
+
+  // Filter by role
+  function filterByRole() {
+    const roleFilter = document.getElementById('roleFilter').value;
+    
+    let filteredUsers = allUsers;
+    if (roleFilter !== 'all') {
+      filteredUsers = allUsers.filter(user => user.role === roleFilter);
+    }
+
+    displayUsers(filteredUsers);
+  }
+
+  // Display users
+  function displayUsers(users) {
+    const tbody = document.getElementById('usersTableBody');
+    
+    if (!users || users.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="7" style="text-align: center;">No users found</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = users.map(user => {
+      const statusClass = user.approval_status === 'approved' ? 'status-approved' : 
+                         user.approval_status === 'rejected' ? 'status-rejected' : 'status-pending';
+      
+      const roleName = {
+        'supervisor': 'Supervisor',
+        'house_tutor': 'House Tutor',
+        'assistant_provost': 'Asst. Provost',
+        'provost': 'Provost',
+        'treasurer': 'Treasurer',
+        'vc': 'Vice Chancellor',
+        'admin': 'Admin'
+      }[user.role] || user.role;
+
+      return `
+        <tr>
+          <td>${user.name}</td>
+          <td>${user.email}</td>
+          <td><strong>${roleName}</strong></td>
+          <td>${user.floor ? `Floor ${user.floor}` : '-'}</td>
+          <td>${new Date(user.created_at).toLocaleDateString()}</td>
+          <td><span class="status-badge ${statusClass}">${user.approval_status || 'pending'}</span></td>
+          <td>
+                <div style="display: flex; gap: 5px; flex-wrap: wrap;">
+                  ${user.approval_status !== 'approved' ? 
+                    `<button class="btn-approve" onclick="approveUser('${user.id}')">
+                      <i class="fas fa-check"></i> Approve
+                    </button>` : ''
+                  }
+                  ${user.approval_status === 'pending' ? 
+                    `<button class="btn-reject" onclick="rejectUser('${user.id}')">
+                      <i class="fas fa-times"></i> Reject
+                    </button>` : ''
+                  }
+                  <!-- নতুন: Edit Role বাটন -->
+                  <button class="btn-edit" onclick="openEditRoleModal('${user.id}', '${user.role}')">
+                    <i class="fas fa-edit"></i> Edit Role
+                  </button>
+                  <!-- Edit Role Modal -->
+                  <div id="editRoleModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000;">
+                    <div style="background: white; max-width: 400px; margin: 200px auto; padding: 30px; border-radius: 10px;">
+                      <h2 style="color: var(--accent-2); margin-bottom: 20px;">Change User Role</h2>
+                      
+                      <div style="margin-bottom: 20px;">
+                        <label style="display: block; margin-bottom: 5px; font-weight: 600;">Select New Role</label>
+                        <select id="newRoleSelect" style="width: 100%; padding: 10px; border: 1px solid #e2e8f0; border-radius: 5px;">
+                          <option value="supervisor">👤 Supervisor</option>
+                          <option value="house_tutor">🏠 House Tutor</option>
+                          <option value="assistant_provost">👔 Assistant Provost</option>
+                          <option value="provost">👑 Provost</option>
+                          <option value="treasurer">💰 Treasurer</option>
+                          <option value="vc">🎓 Vice Chancellor</option>
+                          <option value="admin">⚙️ Admin</option>
+                        </select>
+                      </div>
+                      
+                      <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                        <button onclick="closeEditRoleModal()" style="padding: 10px 20px; background: #95a5a6; color: white; border: none; border-radius: 5px; cursor: pointer;">Cancel</button>
+                        <button onclick="confirmRoleChange()" style="padding: 10px 20px; background: var(--accent-2); color: white; border: none; border-radius: 5px; cursor: pointer;">Update Role</button>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <button class="btn-delete" onclick="openDeleteModal('${user.id}', '${user.name}')">
+                    <i class="fas fa-trash"></i> Delete
+                  </button>
+                </div>
+              </td>
+            </tr>
+      `;
+    }).join('');
+  }
+
+  // Approve user
+  window.approveUser = async function(userId) {
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ 
+          approval_status: 'approved',
+          approved_at: new Date()
+        })
+        .eq('id', userId);
+
+      if (error) throw error;
+      
+      alert('✅ User approved successfully!');
+      loadUsers();
+    } catch (error) {
+      alert('Error approving user: ' + error.message);
+    }
+  };
+
+  // Reject user
+  window.rejectUser = async function(userId) {
+    const reason = prompt('Please enter rejection reason:');
+    if (!reason) return;
+
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ 
+          approval_status: 'rejected',
+          rejection_reason: reason
+        })
+        .eq('id', userId);
+
+      if (error) throw error;
+      
+      alert('User rejected');
+      loadUsers();
+    } catch (error) {
+      alert('Error rejecting user: ' + error.message);
+    }
+  };
+
+  // Open delete confirmation modal
+  window.openDeleteModal = function(userId, userName) {
+    userToDelete = userId;
+    document.getElementById('deleteMessage').textContent = `Are you sure you want to delete "${userName}"? This action cannot be undone.`;
+    document.getElementById('deleteModal').style.display = 'block';
+  };
+
+  // Close delete modal
+  window.closeDeleteModal = function() {
+    document.getElementById('deleteModal').style.display = 'none';
+    userToDelete = null;
+  };
+
+  // Confirm delete user
+  window.confirmDelete = async function() {
+    if (!userToDelete) return;
+
+    try {
+      // First delete from profiles (due to foreign key constraints)
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .delete()
+        .eq('id', userToDelete);
+
+      if (profileError) throw profileError;
+
+      // Note: The user in auth.users will be orphaned but that's okay
+      // For complete deletion, you'd need admin API which requires service role
+
+      alert('✅ User deleted successfully!');
+      closeDeleteModal();
+      loadUsers();
+      
+    } catch (error) {
+      console.error('Delete error:', error);
+      alert('Error deleting user: ' + error.message);
+      closeDeleteModal();
+    }
+  };
+
+  // Open add user modal
+  window.openAddUserModal = function() {
+    document.getElementById('addUserModal').style.display = 'block';
+  };
+
+  window.closeAddUserModal = function() {
+    document.getElementById('addUserModal').style.display = 'none';
+    // Clear form
+    document.getElementById('newName').value = '';
+    document.getElementById('newEmail').value = '';
+    document.getElementById('newPassword').value = '';
+    document.getElementById('newRole').value = 'supervisor';
+    document.getElementById('newFloor').value = '';
+    document.getElementById('newFloorGroup').style.display = 'none';
+  };
+
+  // Toggle floor field in add modal
+  window.toggleNewFloorField = function() {
+    const role = document.getElementById('newRole').value;
+    const floorGroup = document.getElementById('newFloorGroup');
+    floorGroup.style.display = role === 'house_tutor' ? 'block' : 'none';
+  };
+
+  // Add new user (fixed version)
+  window.addNewUser = async function() {
+    const name = document.getElementById('newName').value;
+    const email = document.getElementById('newEmail').value;
+    const password = document.getElementById('newPassword').value;
+    const role = document.getElementById('newRole').value;
+    const floor = document.getElementById('newFloor').value;
+
+    if (!name || !email || !password || !role) {
+      alert('Please fill all fields');
+      return;
+    }
+
+    try {
+      console.log('Creating user with role:', role);
+
+      // Create auth user with metadata
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            name: name,
+            role: role
+          }
+        }
+      });
+
+      if (error) throw error;
+
+      const user = data.user;
+      console.log('User created:', user);
+
+      // Small delay to allow trigger to complete
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      // Update floor for house tutor if needed
+      if (role === 'house_tutor' && floor) {
+        const { error: updateError } = await supabase
+          .from('profiles')
+          .update({ 
+            floor: floor,
+            approval_status: 'approved'
+          })
+          .eq('id', user.id);
+
+        if (updateError) throw updateError;
+      } else {
+        // Update approval status for other roles
+        const { error: updateError } = await supabase
+          .from('profiles')
+          .update({ 
+            approval_status: 'approved'
+          })
+          .eq('id', user.id);
+
+        if (updateError) throw updateError;
+      }
+
+      alert(`✅ ${role} created successfully!`);
+      closeAddUserModal();
+      loadUsers();
+
+    } catch (error) {
+      console.error('Error creating user:', error);
+      alert('Error creating user: ' + error.message);
+    }
+  };
+
+  // Event listeners
+  document.getElementById('roleFilter').addEventListener('change', filterByRole);
+  document.getElementById('statusFilter').addEventListener('change', loadUsers);
+
+  // Initialize
+  document.addEventListener('DOMContentLoaded', async () => {
+    await checkAdmin();
+    await loadUsers();
+  });
+</script>
+</body>
+</html>
