@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>View File - Boral Hall</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <style>
+    :root {
+      --accent: #282424;
+      --accent-2: #3f8fd5;
+      --muted: #243557;
+      --gold: #ffce00;
+      --green: #27ae60;
+      --red: #e74c3c;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Poppins', sans-serif;
+    }
+
+    body {
+      background: #f6f7fb;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    .btn-back {
+      background: var(--accent-2);
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 5px;
+      cursor: pointer;
+      margin-bottom: 20px;
+      font-weight: 600;
+      transition: 0.3s;
+    }
+
+    .btn-back:hover {
+      background: #1e6fb0;
+      transform: translateY(-2px);
+    }
+
+    .file-header {
+      background: white;
+      padding: 30px;
+      border-radius: 10px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    }
+
+    .file-header h2 {
+      color: var(--accent-2);
+      margin-bottom: 15px;
+    }
+
+    .file-header p {
+      margin: 10px 0;
+      color: var(--muted);
+    }
+
+    .file-header strong {
+      color: var(--accent-2);
+    }
+
+    .timeline {
+      background: white;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    }
+
+    .timeline h3 {
+      color: var(--accent-2);
+      margin-bottom: 20px;
+    }
+
+    .timeline-step {
+      display: flex;
+      gap: 20px;
+      padding: 20px;
+      border-left: 3px solid #e0e0e0;
+      margin-left: 20px;
+      position: relative;
+    }
+
+    .timeline-step:last-child {
+      border-left: none;
+    }
+
+    .timeline-step.completed {
+      border-left-color: var(--green);
+    }
+
+    .timeline-step.pending {
+      border-left-color: #f39c12;
+    }
+
+    .timeline-step.rejected {
+      border-left-color: var(--red);
+    }
+
+    .step-icon {
+      font-size: 24px;
+      min-width: 30px;
+    }
+
+    .step-icon .fa-check-circle {
+      color: var(--green);
+    }
+
+    .step-icon .fa-times-circle {
+      color: var(--red);
+    }
+
+    .step-icon .fa-clock {
+      color: #f39c12;
+    }
+
+    .step-content {
+      flex: 1;
+    }
+
+    .step-content h4 {
+      color: var(--accent-2);
+      margin-bottom: 5px;
+      text-transform: capitalize;
+    }
+
+    .approver-name {
+      font-weight: 600;
+      color: var(--muted);
+      margin: 5px 0;
+    }
+
+    .approval-date {
+      color: #7f8c8d;
+      font-size: 0.9rem;
+      margin: 5px 0;
+    }
+
+    .comments {
+      background: #f8f9fa;
+      padding: 10px;
+      border-radius: 5px;
+      margin: 10px 0;
+      font-style: italic;
+      color: var(--muted);
+    }
+
+    .digital-signature {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px dashed #e0e0e0;
+    }
+
+    .signature-text {
+      color: var(--green);
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+
+    .status-badge {
+      display: inline-block;
+      padding: 5px 15px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+
+    .status-approved {
+      background: #d4edda;
+      color: #155724;
+    }
+
+    .status-pending {
+      background: #fff3cd;
+      color: #856404;
+    }
+
+    .status-rejected {
+      background: #f8d7da;
+      color: #721c24;
+    }
+
+    .file-actions {
+      margin-top: 20px;
+      display: flex;
+      gap: 10px;
+    }
+
+    .btn-download {
+      background: var(--green);
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: 0.3s;
+    }
+
+    .btn-download:hover {
+      background: #229954;
+      transform: translateY(-2px);
+    }
+
+    @media (max-width: 768px) {
+      .timeline-step {
+        flex-direction: column;
+        margin-left: 10px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <button class="btn-back" onclick="window.history.back()">
+      <i class="fas fa-arrow-left"></i> Back
+    </button>
+    
+    <div class="file-header" id="fileHeader">
+      <h2 id="fileTitle">Loading...</h2>
+      <p id="fileDescription"></p>
+      <p><strong>Submitted:</strong> <span id="submittedDate"></span></p>
+      <p><strong>Status:</strong> <span id="fileStatus" class="status-badge"></span></p>
+      <div class="file-actions">
+        <button class="btn-download" id="downloadBtn" onclick="downloadFile()">
+          <i class="fas fa-download"></i> Download File
+        </button>
+      </div>
+    </div>
+    
+    <div class="timeline" id="timeline">
+      <h3><i class="fas fa-history"></i> Approval Timeline</h3>
+      <div id="timelineSteps">Loading...</div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { supabase } from '../js/supabase.js';
+    
+    // Get file ID from URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const fileId = urlParams.get('id');
+    let currentFile = null;
+    
+    async function loadFileDetails() {
+      if (!fileId) {
+        alert('No file ID provided');
+        return;
+      }
+      
+      // Get file with all approvals
+      const { data: file, error } = await supabase
+        .from('files')
+        .select(`
+          *,
+          supervisor:profiles!files_supervisor_id_fkey (name, email),
+          application_approvals(
+            *,
+            approver:profiles!approved_by (name, role)
+          )
+        `)
+        .eq('id', fileId)
+        .single();
+      
+      if (error) {
+        console.error('Error loading file:', error);
+        document.getElementById('timelineSteps').innerHTML = '<p style="color: red;">Error loading file</p>';
+        return;
+      }
+      
+      currentFile = file;
+      
+      // Display file header
+      document.getElementById('fileTitle').textContent = file.title;
+      document.getElementById('fileDescription').textContent = file.description || 'No description provided';
+      document.getElementById('submittedDate').textContent = new Date(file.created_at).toLocaleString();
+      
+      const statusElement = document.getElementById('fileStatus');
+      statusElement.textContent = file.status;
+      statusElement.className = `status-badge status-${file.status}`;
+      
+      // Display timeline
+      const steps = file.application_approvals.sort((a, b) => a.role_order - b.role_order);
+      
+      let timelineHtml = '';
+      steps.forEach(step => {
+        let statusClass = step.status;
+        let icon = step.status === 'approved' ? 'fa-check-circle' : 
+                  step.status === 'rejected' ? 'fa-times-circle' : 'fa-clock';
+        
+        timelineHtml += `
+          <div class="timeline-step ${statusClass}">
+            <div class="step-icon">
+              <i class="fas ${icon}"></i>
+            </div>
+            <div class="step-content">
+              <h4>${step.role.replace('_', ' ').toUpperCase()}</h4>
+              <p class="approver-name">${step.approver?.name || 'Pending'}</p>
+              ${step.approved_at ? `<p class="approval-date">${new Date(step.approved_at).toLocaleString()}</p>` : ''}
+              ${step.comments ? `<div class="comments">"${step.comments}"</div>` : ''}
+              ${step.status === 'approved' ? `
+                <div class="digital-signature">
+                  <span class="signature-text">✓ Digitally Signed by ${step.approver?.name}</span>
+                </div>
+              ` : ''}
+            </div>
+          </div>
+        `;
+      });
+      
+      document.getElementById('timelineSteps').innerHTML = timelineHtml;
+    }
+    
+    window.downloadFile = function() {
+      if (currentFile?.file_url) {
+        window.open(currentFile.file_url, '_blank');
+      } else {
+        alert('File not available');
+      }
+    };
+    
+    loadFileDetails();
+  </script>
+</body>
+</html>

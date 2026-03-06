@@ -2,128 +2,168 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>House Tutor Dashboard | File Movement & Approval System</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes" />
+  <title>House Tutor Dashboard | Boral Hall</title>
 
   <!-- Fonts -->
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   
   <!-- Font Awesome 6 -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
   <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Poppins', sans-serif;
+    }
+
     :root {
-      --accent:#282424;
-      --accent-2:#3f8fd5;
-      --muted:#243557;
-      --gold:#ffce00;
-      --green:#3cdd77bd;
-      --container-width:1200px;
+      --primary: #3498db;
+      --secondary: #2ecc71;
+      --accent: #e74c3c;
+      --warning: #f39c12;
+      --dark: #2c3e50;
+      --light: #ecf0f1;
+      --text: #34495e;
+      --border: #bdc3c7;
+      --gold: #ffce00;
+      --shadow: 0 2px 10px rgba(0,0,0,0.1);
+      --shadow-hover: 0 5px 20px rgba(0,0,0,0.15);
     }
 
-    *{box-sizing:border-box;margin:0;padding:0;font-family:'Poppins',sans-serif}
-    body{
-      background:#f6f7fb;
-      color:#0b1720;
-      overflow-x:hidden;
-      min-height:100vh;
+    body {
+      background: #f5f6fa;
+      min-height: 100vh;
+      overflow-x: hidden;
     }
 
-    /* ---------- HEADER ---------- */
-    header.topbar{
-      position:fixed;top:0;left:0;right:0;z-index:60;
-      display:flex;justify-content:center;pointer-events:none;
-    }
-    header .bar{
-      pointer-events:auto;
-      width:100%;max-width:var(--container-width);
-      display:flex;align-items:center;justify-content:space-between;
-      gap:16px;padding:18px 24px;margin:16px;
-      background:linear-gradient(180deg,rgba(255,255,255,0.08),rgba(255,255,255,0.02));
-      border-radius:12px;
-      backdrop-filter:blur(10px) saturate(120%);
-      box-shadow:0 6px 24px rgba(6,12,34,0.12);
+    /* Header Styles */
+    .header {
+      background: linear-gradient(135deg, var(--primary), #2980b9);
+      color: white;
+      padding: 1rem;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 1000;
+      box-shadow: var(--shadow);
     }
 
-    .brand{display:flex;align-items:center;gap:12px}
-    .brand .logo{
-      width:44px;height:44px;border-radius:8px;
-      overflow:hidden;background:linear-gradient(135deg,var(--accent),var(--accent-2));
-      display:flex;align-items:center;justify-content:center;
+    .header-content {
+      max-width: 1400px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
     }
-    .brand .logo img{width:100%;height:100%;object-fit:contain}
-    .brand h1{color:#b29315;font-size:1.1rem;font-weight:600;text-shadow:0 2px 8px rgba(62, 8, 8, 0.35)}
 
-    /* Navigation */
-    nav.topnav{display:flex;align-items:center;gap:14px}
-    nav.topnav a{
-      color:#bf3737;text-decoration:none;font-weight:600;
-      padding:8px 14px;border-radius:8px;transition:0.25s;
+    .logo-area {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
     }
-    nav.topnav a:hover{background:rgba(255,255,255,0.15);transform:translateY(-2px)}
+
+    .logo {
+      width: 45px;
+      height: 45px;
+      background: white;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      color: var(--primary);
+      font-size: 1.2rem;
+    }
+
+    .logo img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+
+    .title h1 {
+      font-size: 1.2rem;
+      font-weight: 600;
+    }
+
+    .title small {
+      font-size: 0.8rem;
+      opacity: 0.9;
+    }
 
     /* User Area */
-    .user-area{
-      display:flex;
-      align-items:center;
-      gap:20px;
+    .user-area {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
     }
 
-    .user-info{
-      display:flex;
-      align-items:center;
-      gap:10px;
-      background:rgba(255,255,255,0.2);
-      padding:8px 15px;
-      border-radius:25px;
-      color:white;
-    }
-    
-    .role-badge{
-      background:var(--gold);
-      color:#000;
-      padding:5px 15px;
-      border-radius:20px;
-      font-weight:600;
-      font-size:0.9rem;
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      background: rgba(255,255,255,0.15);
+      padding: 0.5rem 1rem;
+      border-radius: 50px;
+      backdrop-filter: blur(10px);
     }
 
-    .logout-btn{
-      background:var(--gold);
-      color:#000;
-      border:none;
-      padding:8px 20px;
-      border-radius:25px;
-      cursor:pointer;
-      font-weight:600;
-      display:flex;
-      align-items:center;
-      gap:6px;
-      transition:0.3s;
-    }
-    .logout-btn:hover{
-      background:#ffd633;
-      transform:translateY(-2px);
+    .user-info i {
+      font-size: 1.5rem;
     }
 
-    /* Role Switcher Styles */
+    .user-details {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .user-name {
+      font-weight: 600;
+      font-size: 0.9rem;
+    }
+
+    .role-badge {
+      background: var(--gold);
+      color: var(--dark);
+      padding: 0.2rem 0.8rem;
+      border-radius: 50px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      display: inline-block;
+      text-align: center;
+    }
+
+    /* Role Switcher */
     .role-switcher {
-      margin-left: 15px;
+      position: relative;
     }
 
     .role-select {
-      padding: 8px 15px;
+      padding: 0.5rem 2rem 0.5rem 1rem;
       border: 2px solid var(--gold);
-      border-radius: 25px;
+      border-radius: 50px;
       background: rgba(255,255,255,0.2);
       color: white;
-      font-weight: 600;
+      font-weight: 500;
+      font-size: 0.9rem;
       cursor: pointer;
-      min-width: 200px;
+      appearance: none;
+      -webkit-appearance: none;
+      background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='white'><path d='M7 10l5 5 5-5z'/></svg>");
+      background-repeat: no-repeat;
+      background-position: right 0.7rem center;
+      min-width: 180px;
     }
 
     .role-select option {
-      background: #2c3e50;
+      background: var(--dark);
       color: white;
     }
 
@@ -131,228 +171,674 @@
       background: rgba(255,255,255,0.3);
     }
 
-    /* ---------- HERO SLIDES ---------- */
-    .hero{
-      position:relative;
-      height:40vh;
-      min-height:300px;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      text-align:center;
-      overflow:hidden;
-      margin-top:100px;
-    }
-    .slides{
-      position:absolute;inset:0;z-index:0;
-    }
-    .slide{
-      position:absolute;inset:0;
-      background-size:cover;background-position:center;
-      opacity:0;transform:scale(1.03);
-      transition:opacity 1.2s ease, transform 8s ease;
-    }
-    .slide.active{opacity:1;transform:scale(1)}
-    .hero::after{
-      content:"";
-      position:absolute;inset:0;z-index:1;
-      background:linear-gradient(180deg,rgba(2,6,23,0.45),rgba(2,6,23,0.6));
-    }
-    .hero-inner{
-      position:relative;z-index:2;
-      color:#fff;
-      text-align:center;
-      padding:20px;
-    }
-    .hero-inner h2{
-      font-size:2.2rem;
-      color:#ffce00;
-      margin-bottom:10px;
-      text-shadow: 0 2px 10px rgba(0,0,0,0.5);
-    }
-    .hero-inner p{
-      font-size:1.05rem;
-      color:#d9f0ff;
-      font-weight:500;
-      text-shadow: 0 1px 5px rgba(0,0,0,0.4);
+    /* Logout Button */
+    .logout-btn {
+      background: var(--accent);
+      color: white;
+      border: none;
+      padding: 0.5rem 1.2rem;
+      border-radius: 50px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 0.9rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: all 0.3s ease;
+      white-space: nowrap;
     }
 
-    /* ---------- MAIN DASHBOARD ---------- */
-    main{
-      max-width:var(--container-width);
-      margin:0 auto;
-      padding:40px 24px 60px;
+    .logout-btn:hover {
+      background: #c0392b;
+      transform: translateY(-2px);
     }
 
-    .cards-row{
-      display:grid;
-      grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
-      gap:24px;
-      margin-top:40px;
+    /* Main Content */
+    .main-content {
+      max-width: 1400px;
+      margin: 100px auto 0;
+      padding: 1.5rem;
     }
 
-    .card{
-      background:#fff;
-      border-radius:14px;
-      padding:28px 20px;
-      text-align:center;
-      box-shadow:0 10px 40px rgba(0,0,0,0.05);
-      transition:transform 0.3s ease, box-shadow 0.3s ease;
-      position: relative;
-      overflow: hidden;
-    }
-    .card:hover{
-      transform:translateY(-8px);
-      box-shadow:0 18px 48px rgba(0,0,0,0.08);
-    }
-    .card i{
-      font-size:40px;
-      color:var(--accent-2);
-      margin-bottom:16px;
-    }
-    .card h3{
-      color:var(--accent-2);
-      font-size:1.25rem;
-      margin-bottom:8px;
-    }
-    .card p{
-      color:var(--muted);
-      font-size:0.95rem;
-      margin-bottom:16px;
-    }
-    .btn-link{
-      background:var(--accent-2);
-      color:#fff;
-      padding:10px 20px;
-      border-radius:8px;
-      text-decoration:none;
-      font-weight:600;
-      transition:0.2s;
-      display:inline-block;
-    }
-    .btn-link:hover{background:#1e6fb0;transform:translateY(-2px)}
-
-    /* ---------- FOOTER ---------- */
-    footer{
-      text-align:center;
-      color:var(--muted);
-      margin-top:60px;
-      padding:20px;
-      font-size:14px;
+    /* Welcome Banner */
+    .welcome-banner {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white;
+      padding: 2rem;
+      border-radius: 20px;
+      margin-bottom: 2rem;
+      box-shadow: var(--shadow);
     }
 
-    @media (max-width:768px){
-      .brand h1{font-size:1rem}
-      .hero-inner h2{font-size:1.8rem}
-      .cards-row{grid-template-columns:1fr}
-      .user-area{flex-wrap:wrap;justify-content:flex-end}
+    .welcome-banner h1 {
+      font-size: 2rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .welcome-banner p {
+      font-size: 1rem;
+      opacity: 0.95;
+    }
+
+    .floor-info {
+      background: rgba(255,255,255,0.2);
+      display: inline-block;
+      padding: 0.5rem 1.5rem;
+      border-radius: 50px;
+      margin-top: 1rem;
+      font-weight: 500;
+    }
+
+    /* Stats Grid */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .stat-card {
+      background: white;
+      padding: 1.5rem;
+      border-radius: 15px;
+      box-shadow: var(--shadow);
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+      transition: all 0.3s ease;
+    }
+
+    .stat-card:hover {
+      transform: translateY(-5px);
+      box-shadow: var(--shadow-hover);
+    }
+
+    .stat-icon {
+      width: 60px;
+      height: 60px;
+      background: rgba(52, 152, 219, 0.1);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2rem;
+      color: var(--primary);
+    }
+
+    .stat-info h3 {
+      font-size: 2rem;
+      color: var(--dark);
+      line-height: 1.2;
+    }
+
+    .stat-info p {
+      color: var(--text);
+      font-size: 0.9rem;
+      opacity: 0.8;
+    }
+
+    /* Content Card */
+    .content-card {
+      background: white;
+      border-radius: 15px;
+      padding: 1.5rem;
+      box-shadow: var(--shadow);
+      margin-bottom: 2rem;
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .card-header h2 {
+      color: var(--dark);
+      font-size: 1.3rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .filter-section {
+      display: flex;
+      gap: 0.8rem;
+      flex-wrap: wrap;
+    }
+
+    .filter-select {
+      padding: 0.5rem 1rem;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-family: inherit;
+      font-size: 0.9rem;
+      background: white;
+      cursor: pointer;
+    }
+
+    /* Table Styles */
+    .table-responsive {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 600px;
+    }
+
+    th {
+      background: var(--primary);
+      color: white;
+      padding: 1rem;
+      text-align: left;
+      font-weight: 600;
+      font-size: 0.9rem;
+    }
+
+    td {
+      padding: 1rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    tr:hover {
+      background: #f8f9fa;
+    }
+
+    /* Status Badge */
+    .status-badge {
+      padding: 0.3rem 1rem;
+      border-radius: 50px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      display: inline-block;
+    }
+
+    .status-pending {
+      background: #fff3cd;
+      color: #856404;
+    }
+
+    .status-approved {
+      background: #d4edda;
+      color: #155724;
+    }
+
+    .status-rejected {
+      background: #f8d7da;
+      color: #721c24;
+    }
+
+    /* Action Buttons */
+    .action-btns {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    .btn-sm {
+      padding: 0.4rem 1rem;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 500;
+      font-size: 0.8rem;
+      transition: all 0.3s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+    }
+
+    .btn-view {
+      background: var(--primary);
+      color: white;
+    }
+
+    .btn-approve {
+      background: var(--secondary);
+      color: white;
+    }
+
+    .btn-reject {
+      background: var(--accent);
+      color: white;
+    }
+
+    .btn-sm:hover {
+      transform: translateY(-2px);
+    }
+
+    /* Modal Styles */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.5);
+      z-index: 2000;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+    }
+
+    .modal.active {
+      display: flex;
+    }
+
+    .modal-content {
+      background: white;
+      width: 100%;
+      max-width: 500px;
+      padding: 2rem;
+      border-radius: 15px;
+      box-shadow: var(--shadow-hover);
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+
+    .modal-content h2 {
+      color: var(--dark);
+      margin-bottom: 1.5rem;
+    }
+
+    .file-info {
+      background: #f8f9fa;
+      padding: 1rem;
+      border-radius: 8px;
+      margin: 1rem 0;
+    }
+
+    .file-info p {
+      margin: 0.5rem 0;
+      color: var(--text);
+    }
+
+    .form-group {
+      margin: 1rem 0;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-weight: 600;
+      color: var(--dark);
+    }
+
+    .form-group textarea {
+      width: 100%;
+      padding: 0.8rem;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-family: inherit;
+      resize: vertical;
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 0.8rem;
+      justify-content: flex-end;
+      margin-top: 1.5rem;
+      flex-wrap: wrap;
+    }
+
+    .btn-modal {
+      padding: 0.8rem 1.5rem;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.3s ease;
+    }
+
+    .btn-modal:hover {
+      transform: translateY(-2px);
+    }
+
+    /* Empty State */
+    .empty-state {
+      text-align: center;
+      padding: 3rem;
+      color: var(--text);
+    }
+
+    .empty-state i {
+      font-size: 4rem;
+      color: var(--border);
+      margin-bottom: 1rem;
+    }
+
+    /* Footer */
+    .footer {
+      text-align: center;
+      padding: 2rem;
+      color: var(--text);
+      font-size: 0.9rem;
+    }
+
+    /* Responsive Design */
+    @media screen and (max-width: 1024px) {
+      .main-content {
+        padding: 1rem;
+      }
+      
+      .welcome-banner h1 {
+        font-size: 1.8rem;
+      }
+    }
+
+    @media screen and (max-width: 768px) {
+      .header-content {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .logo-area {
+        justify-content: center;
+      }
+
+      .user-area {
+        justify-content: center;
+      }
+
+      .user-info {
+        width: 100%;
+        justify-content: center;
+      }
+
+      .role-select {
+        width: 100%;
+        min-width: unset;
+      }
+
+      .logout-btn {
+        width: 100%;
+        justify-content: center;
+      }
+
+      .welcome-banner {
+        padding: 1.5rem;
+      }
+
+      .welcome-banner h1 {
+        font-size: 1.5rem;
+      }
+
+      .stats-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+      }
+
+      .stat-card {
+        padding: 1rem;
+      }
+
+      .stat-icon {
+        width: 50px;
+        height: 50px;
+        font-size: 1.5rem;
+      }
+
+      .stat-info h3 {
+        font-size: 1.5rem;
+      }
+
+      .card-header {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .filter-section {
+        width: 100%;
+      }
+
+      .filter-select {
+        flex: 1;
+      }
+
+      .modal-content {
+        padding: 1.5rem;
+      }
+
+      .modal-actions {
+        flex-direction: column;
+      }
+
+      .btn-modal {
+        width: 100%;
+      }
+    }
+
+    @media screen and (max-width: 480px) {
+      .welcome-banner {
+        padding: 1rem;
+      }
+
+      .welcome-banner h1 {
+        font-size: 1.3rem;
+      }
+
+      .welcome-banner p {
+        font-size: 0.9rem;
+      }
+
+      .floor-info {
+        padding: 0.3rem 1rem;
+        font-size: 0.9rem;
+      }
+
+      .stat-card {
+        flex-direction: column;
+        text-align: center;
+        gap: 0.5rem;
+      }
+
+      .action-btns {
+        flex-direction: column;
+      }
+
+      .btn-sm {
+        width: 100%;
+        justify-content: center;
+      }
+
+      .table-responsive {
+        margin: 0 -1rem;
+        padding: 0 1rem;
+      }
+    }
+
+    /* Touch-friendly improvements */
+    @media (hover: none) and (pointer: coarse) {
+      .btn-sm, 
+      .btn-modal,
+      .filter-select,
+      .role-select {
+        min-height: 44px;
+      }
+
+      .stat-card:hover {
+        transform: none;
+      }
+
+      .btn-sm:hover,
+      .btn-modal:hover {
+        transform: none;
+      }
     }
   </style>
 </head>
 
 <body>
-  <!-- HEADER -->
-  <header class="topbar">
-    <div class="bar">
-      <div class="brand">
-        <div class="logo" title="BAUET">
-          <img src="../image/bauet-logo2.png" alt="BAUET Logo">
+  <header class="header">
+    <div class="header-content">
+      <div class="logo-area">
+        <div class="logo">
+          <img src="../image/bauet-logo2.png" alt="Boral Hall">
         </div>
-        <div>
+        <div class="title">
           <h1>House Tutor Dashboard</h1>
+          <small>Boral Hall</small>
         </div>
       </div>
 
       <div class="user-area">
         <div class="user-info">
-          <i class="fas fa-user-circle fa-2x"></i>
-          <span id="userName">Loading...</span>
-          <span class="role-badge" id="userRoleBadge">House Tutor</span>
+          <i class="fas fa-user-circle"></i>
+          <div class="user-details">
+            <span class="user-name" id="userName">Loading...</span>
+            <span class="role-badge" id="userFloor">Floor</span>
+          </div>
         </div>
         
-        <!-- Role Switcher Container - শুধু অ্যাডমিনের জন্য দেখাবে -->
         <div id="roleSwitcherContainer"></div>
         
         <button class="logout-btn" onclick="logout()">
-          <i class="fas fa-sign-out-alt"></i> Logout
+          <i class="fas fa-sign-out-alt"></i>
+          <span>Logout</span>
         </button>
       </div>
     </div>
   </header>
 
-  <!-- HERO SLIDES -->
-  <section class="hero" id="hero">
-    <div class="slides" id="slides">
-      <div class="slide active" style="background-image:url('../image/BAUET-Campus.jpg')"></div>
-      <div class="slide" style="background-image:url('../image/bauet.jpeg')"></div>
-      <div class="slide" style="background-image:url('../image/boral_back.jpeg')"></div>
-      <div class="slide" style="background-image:url('../image/acc_buli.jpeg')"></div>
-    </div>
-
-    <div class="hero-inner">
-      <h2>Welcome, <span id="welcomeName">House Tutor</span>!</h2>
-      <p>Review and manage student applications for your floor.</p>
-    </div>
-  </section>
-
-  <!-- MAIN CONTENT -->
-  <main>
-    <!-- Stats Cards -->
-    <div class="cards-row">
-      <div class="card">
-        <i class="fas fa-clock"></i>
-        <h3>Pending Applications</h3>
-        <p>Applications waiting for your review</p>
-        <span style="font-size: 2rem; color: var(--accent-2);" id="pendingCount">0</span>
-      </div>
-
-      <div class="card">
-        <i class="fas fa-check-circle"></i>
-        <h3>Approved</h3>
-        <p>Applications you have approved</p>
-        <span style="font-size: 2rem; color: var(--accent-2);" id="approvedCount">0</span>
-      </div>
-
-      <div class="card">
-        <i class="fas fa-times-circle"></i>
-        <h3>Rejected</h3>
-        <p>Applications you have rejected</p>
-        <span style="font-size: 2rem; color: var(--accent-2);" id="rejectedCount">0</span>
+  <div class="main-content">
+    <div class="welcome-banner">
+      <h1>Welcome, <span id="welcomeName">House Tutor</span>! 👋</h1>
+      <p>Review and manage student applications for your floor</p>
+      <div class="floor-info" id="floorDisplay">
+        <i class="fas fa-building"></i> Your Floor: <span id="assignedFloor">Loading...</span>
       </div>
     </div>
 
-    <!-- Applications Table -->
-    <div class="cards-row" style="grid-template-columns:1fr;">
-      <div class="card">
-        <h3><i class="fas fa-inbox"></i> Applications to Review</h3>
-        <div style="margin-top: 20px;" id="applicationsList">
-          <p>Loading applications...</p>
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-icon">
+          <i class="fas fa-clock"></i>
+        </div>
+        <div class="stat-info">
+          <h3 id="pendingCount">0</h3>
+          <p>Pending Review</p>
+        </div>
+      </div>
+      
+      <div class="stat-card">
+        <div class="stat-icon">
+          <i class="fas fa-check-circle"></i>
+        </div>
+        <div class="stat-info">
+          <h3 id="approvedCount">0</h3>
+          <p>Approved</p>
+        </div>
+      </div>
+      
+      <div class="stat-card">
+        <div class="stat-icon">
+          <i class="fas fa-times-circle"></i>
+        </div>
+        <div class="stat-info">
+          <h3 id="rejectedCount">0</h3>
+          <p>Rejected</p>
         </div>
       </div>
     </div>
-  </main>
 
-  <footer>
-    &copy; 2025 File Movement & Approval System — Developed by THUNDER-BOND
-  </footer>
+    <div class="content-card">
+      <div class="card-header">
+        <h2>
+          <i class="fas fa-inbox"></i>
+          Applications to Review
+        </h2>
+        <div class="filter-section">
+          <select class="filter-select" id="priorityFilter">
+            <option value="all">All Priority</option>
+            <option value="high">High</option>
+            <option value="medium">Medium</option>
+            <option value="low">Low</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="table-responsive">
+        <table>
+          <thead>
+            <tr>
+              <th>Student</th>
+              <th>Application</th>
+              <th>Submitted</th>
+              <th>Priority</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="applicationsTable">
+            <tr>
+              <td colspan="6" class="empty-state">
+                <i class="fas fa-inbox"></i>
+                <p>No pending applications</p>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Review Modal -->
+  <div class="modal" id="reviewModal">
+    <div class="modal-content">
+      <h2><i class="fas fa-file-alt"></i> Review Application</h2>
+      
+      <div class="file-info" id="fileDetails">
+        <p><strong>File:</strong> <span id="fileTitle"></span></p>
+        <p><strong>From:</strong> <span id="fileSender"></span></p>
+      </div>
+      
+      <div class="form-group">
+        <label for="comments">Comments / Remarks</label>
+        <textarea id="comments" rows="4" placeholder="Add your comments here..."></textarea>
+      </div>
+      
+      <div class="modal-actions">
+        <button class="btn-modal btn-approve" onclick="submitReview('approve')">
+          <i class="fas fa-check"></i> Approve
+        </button>
+        <button class="btn-modal btn-reject" onclick="submitReview('reject')">
+          <i class="fas fa-times"></i> Reject
+        </button>
+        <button class="btn-modal btn-cancel" onclick="closeModal()">
+          Cancel
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">
+    &copy; 2025 Boral Hall - File Movement & Approval System
+  </div>
 
   <script>
-    // Slideshow transition
-    const slides = document.querySelectorAll('.slide');
-    let idx = 0;
-    setInterval(() => {
-      slides[idx].classList.remove('active');
-      idx = (idx + 1) % slides.length;
-      slides[idx].classList.add('active');
-    }, 5000);
+    // Slideshow transition (if needed)
+    // const slides = document.querySelectorAll('.slide');
+    // let idx = 0;
+    // setInterval(() => {
+    //   slides[idx].classList.remove('active');
+    //   idx = (idx + 1) % slides.length;
+    //   slides[idx].classList.add('active');
+    // }, 5000);
   </script>
-  
-  <!-- Main Scripts -->
+
   <script type="module">
     import { initRoleSwitcher } from '../js/components/RoleSwitcher.js';
     import { supabase } from '../js/supabase.js';
+    import { approveFile, rejectFile, loadPendingFiles } from '../js/officer_actions.js';
     
-    // ইউজারের নাম এবং রোল লোড করুন
+    let currentApplicationId = null;
+
     async function loadUserData() {
       try {
         const { data: { user } } = await supabase.auth.getUser();
@@ -363,73 +849,125 @@
         
         const { data: profile } = await supabase
           .from('profiles')
-          .select('name, role, floor')
+          .select('name, floor')
           .eq('id', user.id)
           .single();
         
         document.getElementById('userName').textContent = profile?.name || 'User';
         document.getElementById('welcomeName').textContent = profile?.name?.split(' ')[0] || 'House Tutor';
-        
-        const roleBadge = document.getElementById('userRoleBadge');
-        if (roleBadge) {
-          const roleNames = {
-            'supervisor': 'Supervisor',
-            'house_tutor': 'House Tutor',
-            'assistant_provost': 'Asst. Provost',
-            'provost': 'Provost',
-            'treasurer': 'Treasurer',
-            'vc': 'VC',
-            'admin': 'Admin'
-          };
-          roleBadge.textContent = roleNames[profile?.role] || 'House Tutor';
-        }
+        document.getElementById('assignedFloor').textContent = profile?.floor || 'Not assigned';
+        document.getElementById('userFloor').textContent = `Floor ${profile?.floor || '?'}`;
 
-        // Load applications
-        await loadApplications(profile);
+        await loadApplications();
 
       } catch (error) {
-        console.error('Error loading user data:', error);
+        console.error('Error:', error);
       }
     }
 
-    async function loadApplications(profile) {
+    async function loadApplications() {
       try {
-        const { data: applications } = await supabase
-          .from('files')
-          .select('*')
-          .eq('current_step', 'house_tutor')
-          .eq('status', 'pending');
+        const applications = await loadPendingFiles();
+        
+        document.getElementById('pendingCount').textContent = applications?.length || 0;
+        document.getElementById('approvedCount').textContent = '0';
+        document.getElementById('rejectedCount').textContent = '0';
 
-        const pendingCount = applications?.length || 0;
-        document.getElementById('pendingCount').textContent = pendingCount;
-
-        const listDiv = document.getElementById('applicationsList');
-        if (pendingCount === 0) {
-          listDiv.innerHTML = '<p>No pending applications</p>';
-        } else {
-          listDiv.innerHTML = applications.map(app => `
-            <div style="border-bottom:1px solid #eee; padding:10px; display:flex; justify-content:space-between;">
-              <span>${app.title}</span>
-              <button class="btn-link" style="padding:5px 10px;" onclick="viewApplication('${app.id}')">Review</button>
-            </div>
-          `).join('');
+        const tbody = document.getElementById('applicationsTable');
+        
+        if (!applications || applications.length === 0) {
+          tbody.innerHTML = `
+            <tr>
+              <td colspan="6" class="empty-state">
+                <i class="fas fa-check-circle"></i>
+                <p>No pending applications</p>
+              </td>
+            </tr>
+          `;
+          return;
         }
+
+        tbody.innerHTML = applications.map(app => `
+          <tr>
+            <td>${app.supervisor?.name || 'Unknown'}</td>
+            <td>${app.title}</td>
+            <td>${new Date(app.created_at).toLocaleDateString()}</td>
+            <td><span class="status-badge status-pending">Medium</span></td>
+            <td><span class="status-badge status-pending">Pending</span></td>
+            <td>
+              <div class="action-btns">
+                <button class="btn-sm btn-view" onclick="viewApplication('${app.id}')">
+                  <i class="fas fa-eye"></i>
+                </button>
+                <button class="btn-sm btn-approve" onclick="openReviewModal('${app.id}', '${app.title}', '${app.supervisor?.name || 'Unknown'}')">
+                  <i class="fas fa-check"></i>
+                </button>
+                <button class="btn-sm btn-reject" onclick="openRejectModal('${app.id}')">
+                  <i class="fas fa-times"></i>
+                </button>
+              </div>
+            </td>
+          </tr>
+        `).join('');
       } catch (error) {
-        console.error('Error loading applications:', error);
+        console.error('Error:', error);
       }
     }
 
     window.viewApplication = function(id) {
       window.location.href = `view_file_details.html?id=${id}`;
     };
-    
-    // Role Switcher initialize করুন (শুধু অ্যাডমিনের জন্য দেখাবে)
+
+    window.openReviewModal = function(id, title, sender) {
+      currentApplicationId = id;
+      document.getElementById('fileTitle').textContent = title;
+      document.getElementById('fileSender').textContent = sender;
+      document.getElementById('reviewModal').classList.add('active');
+    };
+
+    window.openRejectModal = function(id) {
+      currentApplicationId = id;
+      document.getElementById('fileTitle').textContent = 'Reject Application';
+      document.getElementById('fileSender').textContent = '';
+      document.getElementById('reviewModal').classList.add('active');
+    };
+
+    window.closeModal = function() {
+      document.getElementById('reviewModal').classList.remove('active');
+      document.getElementById('comments').value = '';
+      currentApplicationId = null;
+    };
+
+    window.submitReview = async function(action) {
+      if (!currentApplicationId) return;
+      
+      const comments = document.getElementById('comments').value;
+      
+      if (action === 'reject' && !comments) {
+        alert('Please provide reason for rejection');
+        return;
+      }
+      
+      if (action === 'approve') {
+        const success = await approveFile(currentApplicationId, comments);
+        if (success) {
+          alert('✅ File approved!');
+        }
+      } else {
+        const success = await rejectFile(currentApplicationId, comments);
+        if (success) {
+          alert('❌ File rejected');
+        }
+      }
+      
+      closeModal();
+      loadApplications();
+    };
+
     await initRoleSwitcher();
-    
-    // ইউজার ডাটা লোড করুন
     await loadUserData();
   </script>
-  
+
   <script type="module" src="../js/auth.js"></script>
 </body>
 </html>

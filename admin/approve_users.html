@@ -765,27 +765,69 @@
     };
 
     // Confirm delete
-    window.confirmDelete = async function() {
-      if (!userToDelete) return;
+   // Confirm delete user (সিম্পল ভার্সন)
+window.confirmDelete = async function() {
+  if (!userToDelete) return;
 
-      try {
-        const { error } = await supabase
+  try {
+    // First delete from profiles (will cascade if foreign keys are set)
+    const { error: profileError } = await supabase
+      .from('profiles')
+      .delete()
+      .eq('id', userToDelete);
+
+    if (profileError) {
+      // If foreign key error, try to delete related records first
+      if (profileError.message.includes('foreign key constraint')) {
+        
+        // Delete notices
+        await supabase
+          .from('notices')
+          .delete()
+          .eq('created_by', userToDelete);
+        
+        // Update approvals
+        await supabase
+          .from('application_approvals')
+          .update({ approved_by: null })
+          .eq('approved_by', userToDelete);
+        
+        // Update files
+        await supabase
+          .from('files')
+          .update({ 
+            supervisor_id: null,
+            house_tutor_id: null,
+            assistant_provost_id: null,
+            provost_id: null,
+            treasurer_id: null,
+            vc_id: null 
+          })
+          .or(`supervisor_id.eq.${userToDelete},house_tutor_id.eq.${userToDelete},assistant_provost_id.eq.${userToDelete},provost_id.eq.${userToDelete},treasurer_id.eq.${userToDelete},vc_id.eq.${userToDelete}`);
+        
+        // Try deleting profile again
+        const { error: retryError } = await supabase
           .from('profiles')
           .delete()
           .eq('id', userToDelete);
-
-        if (error) throw error;
-
-        alert('✅ User deleted successfully!');
-        closeDeleteModal();
-        loadUsers();
         
-      } catch (error) {
-        console.error('Delete error:', error);
-        alert('Error deleting user: ' + error.message);
-        closeDeleteModal();
+        if (retryError) throw retryError;
+        
+      } else {
+        throw profileError;
       }
-    };
+    }
+
+    alert('✅ User deleted successfully!');
+    closeDeleteModal();
+    loadUsers();
+    
+  } catch (error) {
+    console.error('Delete error:', error);
+    alert('Error deleting user: ' + error.message);
+    closeDeleteModal();
+  }
+};
 
     // Event listeners
     document.getElementById('roleFilter').addEventListener('change', filterByRole);
