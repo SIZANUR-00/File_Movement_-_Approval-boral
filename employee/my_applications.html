@@ -7,7 +7,8 @@
 
   <!-- Fonts & Icons -->
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
-  <script src="https://kit.fontawesome.com/a2e0f1e6b1.js" crossorigin="anonymous"></script>
+  <!-- Fixed Font Awesome CDN -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 
   <style>
     :root {
@@ -28,7 +29,6 @@
       min-height:100vh;
     }
 
-    /* ---------- HEADER ---------- */
     header.topbar{
       position:fixed;top:0;left:0;right:0;z-index:60;
       display:flex;justify-content:center;pointer-events:none;
@@ -58,7 +58,7 @@
       color:#bf3737;text-decoration:none;font-weight:600;
       padding:8px 14px;border-radius:8px;transition:0.25s;
     }
-    nav.topnav a:hover{background:rgba(255,255,255,0.15);transform:translateY(-2px)}
+    nav.topnav a:hover, nav.topnav a.active{background:rgba(255,255,255,0.15);transform:translateY(-2px)}
 
     .user-info{
       display:flex;align-items:center;gap:20px;color:#129922;font-weight:900;
@@ -73,7 +73,6 @@
     }
     .logout-btn:hover{background:#ffd633;transform:translateY(-2px)}
 
-    /* ---------- HERO SLIDES ---------- */
     .hero{
       position:relative;
       height:40vh;
@@ -119,7 +118,6 @@
       text-shadow: 0 1px 5px rgba(0,0,0,0.4);
     }
 
-    /* ---------- MAIN CONTENT ---------- */
     main{
       max-width:var(--container-width);
       margin:0 auto;
@@ -141,7 +139,6 @@
       text-align:center;
     }
 
-    /* Applications Table */
     .applications-table {
       width: 100%;
       border-collapse: collapse;
@@ -215,20 +212,26 @@
       padding: 5px 10px;
       font-size: 0.8rem;
     }
+
+    .actions-cell {
+      display: flex;
+      gap: 8px;
+      flex-wrap: nowrap;
+      align-items: center;
+    }
     
     .empty-state {
       text-align: center;
-      padding: 40px;
+      padding: 60px;
       color: var(--muted);
     }
     
     .empty-state i {
-      font-size: 48px;
+      font-size: 64px;
       margin-bottom: 16px;
       color: #cbd5e0;
     }
 
-    /* Filter Section */
     .filter-section {
       display: flex;
       gap: 15px;
@@ -253,13 +256,14 @@
     }
     
     .stat-card {
-      background: white;
+      background: linear-gradient(135deg, #f8fafc, #ffffff);
       padding: 20px;
-      border-radius: 10px;
+      border-radius: 12px;
       box-shadow: 0 2px 10px rgba(0,0,0,0.05);
       flex: 1;
       min-width: 150px;
       text-align: center;
+      border: 1px solid #e2e8f0;
     }
     
     .stat-card h3 {
@@ -273,13 +277,17 @@
       font-size: 0.9rem;
     }
 
-    /* ---------- FOOTER ---------- */
     footer{
       text-align:center;
       color:var(--muted);
       margin-top:60px;
       padding:20px;
       font-size:14px;
+    }
+
+    .loading-spinner {
+      text-align: center;
+      padding: 40px;
     }
 
     @media (max-width:768px){
@@ -303,7 +311,6 @@
 </head>
 
 <body>
-  <!-- HEADER -->
   <header class="topbar">
     <div class="bar">
       <div class="brand">
@@ -319,7 +326,7 @@
       <nav class="topnav">
         <a href="e_dashboard.html"><i class="fas fa-home"></i> Dashboard</a>
         <a href="apply.html"><i class="fas fa-paper-plane"></i> Apply</a>
-        <a href="my_applications.html" style="background:rgba(255,255,255,0.15);"><i class="fas fa-folder-open"></i> My Files</a>
+        <a href="my_applications.html" class="active"><i class="fas fa-folder-open"></i> My Files</a>
         <a href="status.html"><i class="fas fa-search"></i> Tracking</a>
         <a href="notifications.html"><i class="fas fa-bell"></i> Notifications</a>
       </nav>
@@ -327,14 +334,13 @@
       <div class="user-info">
         <i class="fas fa-user-circle"></i>
         <span id="userName">Loading...</span>
-        <button class="logout-btn" onclick="logout()">
+        <button class="logout-btn" id="logoutBtn">
           <i class="fas fa-sign-out-alt"></i> Logout
         </button>
       </div>
     </div>
   </header>
 
-  <!-- HERO SECTION -->
   <section class="hero" id="hero">
     <div class="slides" id="slides">
       <div class="slide active" style="background-image:url('/image/BAUET-Campus.jpg')"></div>
@@ -349,12 +355,10 @@
     </div>
   </section>
 
-  <!-- MAIN CONTENT -->
   <main>
     <div class="content-box">
-      <h1>My Submitted Files</h1>
+      <h1><i class="fas fa-file-alt"></i> My Submitted Files</h1>
       
-      <!-- Stats Cards -->
       <div class="stats-row">
         <div class="stat-card">
           <h3 id="totalCount">0</h3>
@@ -363,6 +367,10 @@
         <div class="stat-card">
           <h3 id="pendingCount">0</h3>
           <p>Pending</p>
+        </div>
+        <div class="stat-card">
+          <h3 id="inProgressCount">0</h3>
+          <p>In Progress</p>
         </div>
         <div class="stat-card">
           <h3 id="approvedCount">0</h3>
@@ -374,7 +382,6 @@
         </div>
       </div>
       
-      <!-- Filter Section -->
       <div class="filter-section">
         <select class="filter-select" id="statusFilter">
           <option value="all">All Status</option>
@@ -391,39 +398,41 @@
           <option value="month">This Month</option>
         </select>
         
-        <input type="text" class="filter-select" id="searchInput" placeholder="Search by title...">
+        <input type="text" class="filter-select" id="searchInput" placeholder="🔍 Search by title...">
       </div>
 
-      <!-- Applications Table -->
-      <table class="applications-table">
-        <thead>
-          <tr>
-            <th>File ID</th>
-            <th>Title</th>
-            <th>Submitted Date</th>
-            <th>Current Step</th>
-            <th>Status</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody id="applicationsTableBody">
-          <tr>
-            <td colspan="6" class="empty-state">
-              <i class="fas fa-spinner fa-pulse"></i>
-              <p>Loading your applications...</p>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+      <div style="overflow-x: auto;">
+        <table class="applications-table">
+          <thead>
+            <tr>
+              <th>File ID</th>
+              <th>Title</th>
+              <th>Submitted Date</th>
+              <th>Current Step</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="applicationsTableBody">
+            <tr>
+              <td colspan="6" class="loading-spinner">
+                <i class="fas fa-spinner fa-pulse fa-2x"></i>
+                <p>Loading your applications...</p>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
 
-      <!-- Empty State -->
-      <div class="empty-state" id="emptyState" style="display: none;">
-        <i class="fas fa-folder-open"></i>
-        <h3>No Applications Found</h3>
-        <p>You haven't submitted any files yet.</p>
-        <button class="action-btn" onclick="window.location.href='apply.html'" style="margin-top: 15px;">
-          <i class="fas fa-plus"></i> Submit New File
-        </button>
+      <div id="emptyState" style="display: none;">
+        <div class="empty-state">
+          <i class="fas fa-folder-open"></i>
+          <h3>No Applications Found</h3>
+          <p>You haven't submitted any files yet.</p>
+          <button class="action-btn" onclick="window.location.href='apply.html'" style="margin-top: 15px;">
+            <i class="fas fa-plus"></i> Submit New File
+          </button>
+        </div>
       </div>
     </div>
   </main>
@@ -432,8 +441,13 @@
     &copy; 2025 Boral Hall - File Movement & Approval System — Developed by THUNDER-BOND
   </footer>
 
-  <script>
-    // Slideshow transition
+  <script type="module">
+    import { supabase } from '../js/supabase.js';
+
+    let allFiles = [];
+    let officersCache = {};
+
+    // Slideshow
     const slides = document.querySelectorAll('.slide');
     let idx = 0;
     setInterval(() => {
@@ -441,15 +455,13 @@
       idx = (idx + 1) % slides.length;
       slides[idx].classList.add('active');
     }, 5000);
-  </script>
 
-  <script type="module">
-    import { supabase } from '../js/supabase.js';
+    // Logout
+    document.getElementById('logoutBtn').addEventListener('click', async () => {
+      await supabase.auth.signOut();
+      window.location.href = '../index.html';
+    });
 
-    // Global variables for filtering
-    let allFiles = [];
-    
-    // Load user info
     async function loadUserInfo() {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
@@ -460,11 +472,35 @@
           .single();
         
         document.getElementById('userName').textContent = profile?.name || 'User';
+        return user;
+      }
+      return null;
+    }
+
+    async function loadOfficers() {
+      const roles = ['house_tutor', 'assistant_provost', 'provost', 'treasurer', 'vc'];
+      
+      for (const role of roles) {
+        const { data } = await supabase
+          .from('profiles')
+          .select('id, name, floor')
+          .eq('role', role);
+        
+        if (data) {
+          officersCache[role] = data;
+        }
       }
     }
 
-    // Format date
+    function getOfficerName(role, officerId) {
+      if (!officerId) return 'Not Assigned';
+      const officers = officersCache[role] || [];
+      const officer = officers.find(o => o.id === officerId);
+      return officer ? officer.name : 'Unknown';
+    }
+
     function formatDate(dateString) {
+      if (!dateString) return 'N/A';
       const date = new Date(dateString);
       return date.toLocaleDateString('en-US', { 
         year: 'numeric', 
@@ -473,43 +509,40 @@
       });
     }
 
-    // Get current step display name
     function getCurrentStepDisplay(file) {
-      if (file.status === 'approved') return 'Fully Approved';
-      if (file.status === 'rejected') return 'Rejected';
+      if (file.status === 'approved') return '✅ Fully Approved';
+      if (file.status === 'rejected') return '❌ Rejected';
       if (file.current_step === 'completed') return 'Completed';
       
       const stepMap = {
-        'house_tutor': 'House Tutor',
-        'assistant_provost': 'Assistant Provost',
-        'provost': 'Provost',
-        'treasurer': 'Treasurer',
-        'vc': 'Vice Chancellor'
+        'house_tutor': '🏠 House Tutor',
+        'assistant_provost': '📘 Assistant Provost',
+        'provost': '🏛️ Provost',
+        'treasurer': '💰 Treasurer',
+        'vc': '🎓 Vice Chancellor',
+        'pending': '⏳ Initial Review'
       };
       
       return stepMap[file.current_step] || file.current_step;
     }
 
-    // Get officer name for current step
     function getCurrentOfficerName(file) {
-      if (file.status === 'approved' || file.status === 'rejected' || file.current_step === 'completed') {
-        return '-';
-      }
-      
-      const officerField = file.current_step + '_id';
-      const officerRelation = file.current_step;
-      
-      // Check if we have the officer name from the joined data
-      if (file[officerRelation] && file[officerRelation].name) {
-        return file[officerRelation].name;
-      }
-      
-      return 'Pending';
+      if (file.status === 'approved') return '-';
+      if (file.status === 'rejected') return '-';
+      if (file.current_step === 'completed') return '-';
+
+      const currentApproval = (file.application_approvals || []).find(a => a.status === 'pending');
+      if (!currentApproval) return 'Not Assigned';
+
+      return currentApproval.approver?.name || getOfficerName(currentApproval.role, currentApproval.approved_by);
     }
 
-    // Load applications
+    function getApprovedCount(file) {
+      return (file.application_approvals || []).filter(a => a.status === 'approved').length;
+    }
+
     async function loadMyApplications() {
-      const { data: { user } } = await supabase.auth.getUser();
+      const user = await loadUserInfo();
       
       if (!user) {
         window.location.href = '../index.html';
@@ -517,17 +550,19 @@
       }
 
       try {
-        // Get supervisor's files
+        await loadOfficers();
+
         const { data: files, error } = await supabase
           .from('files')
           .select(`
             *,
-            house_tutor:profiles!files_house_tutor_id_fkey (name),
-            assistant_provost:profiles!files_assistant_provost_id_fkey (name),
-            provost:profiles!files_provost_id_fkey (name),
-            treasurer:profiles!files_treasurer_id_fkey (name),
-            vc:profiles!files_vc_id_fkey (name),
-            application_approvals(*)
+            application_approvals(
+              role,
+              role_order,
+              approved_by,
+              status,
+              approver:profiles!approved_by(name)
+            )
           `)
           .eq('supervisor_id', user.id)
           .order('created_at', { ascending: false });
@@ -536,10 +571,7 @@
 
         allFiles = files || [];
         
-        // Update stats
         updateStats();
-        
-        // Display files
         displayFiles(allFiles);
 
       } catch (error) {
@@ -547,39 +579,46 @@
         document.getElementById('applicationsTableBody').innerHTML = `
           <tr>
             <td colspan="6" class="empty-state">
-              <i class="fas fa-exclamation-triangle" style="color: #e74c3c;"></i>
+              <i class="fas fa-exclamation-triangle" style="color: #e74c3c; font-size: 48px;"></i>
               <p>Error loading files. Please try again.</p>
+              <p style="font-size: 12px; color: #999;">${error.message}</p>
             </td>
           </tr>
         `;
       }
     }
 
-    // Update statistics
     function updateStats() {
       const total = allFiles.length;
-      const pending = allFiles.filter(f => f.status === 'pending').length;
+      const pending = allFiles.filter(f => f.status === 'pending' && getApprovedCount(f) === 0).length;
+      const inProgress = allFiles.filter(f => f.status === 'pending' && getApprovedCount(f) > 0).length;
       const approved = allFiles.filter(f => f.status === 'approved').length;
       const rejected = allFiles.filter(f => f.status === 'rejected').length;
       
       document.getElementById('totalCount').textContent = total;
       document.getElementById('pendingCount').textContent = pending;
+      document.getElementById('inProgressCount').textContent = inProgress;
       document.getElementById('approvedCount').textContent = approved;
       document.getElementById('rejectedCount').textContent = rejected;
     }
 
-    // Display files in table
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
     function displayFiles(files) {
       const tbody = document.getElementById('applicationsTableBody');
-      const emptyState = document.getElementById('emptyState');
+      const emptyStateDiv = document.getElementById('emptyState');
       
       if (!files || files.length === 0) {
         tbody.innerHTML = '';
-        emptyState.style.display = 'block';
+        emptyStateDiv.style.display = 'block';
         return;
       }
 
-      emptyState.style.display = 'none';
+      emptyStateDiv.style.display = 'none';
 
       tbody.innerHTML = files.map(file => {
         const currentStep = getCurrentStepDisplay(file);
@@ -599,57 +638,60 @@
           statusText = 'In Progress';
         }
 
-        // Format the current step display
-        const stepDisplay = officerName !== '-' && officerName !== 'Pending' 
-          ? `${currentStep} (${officerName})`
+        const stepDisplay = officerName !== 'Not Assigned' && officerName !== '-'
+          ? `${currentStep}<br><small style="font-size: 10px; color: #666;">(${officerName})</small>`
           : currentStep;
+
+        const shortId = file.id.substring(0, 8);
 
         return `
           <tr>
-            <td><code>FILE-${file.id.slice(0,8)}</code></td>
-            <td><strong>${file.title}</strong></td>
+            <td><code>#${shortId}</code></td>
+            <td><strong>${escapeHtml(file.title)}</strong></td>
             <td>${formatDate(file.created_at)}</td>
             <td>${stepDisplay}</td>
             <td><span class="status-badge ${statusClass}">${statusText}</span></td>
             <td>
+              <div class="actions-cell">
               <button class="action-btn small" onclick="window.viewFileDetails('${file.id}')">
                 <i class="fas fa-eye"></i> View
               </button>
               <button class="action-btn small" onclick="window.trackFile('${file.id}')">
                 <i class="fas fa-map-marker-alt"></i> Track
               </button>
+              </div>
             </td>
           </tr>
         `;
       }).join('');
     }
 
-    // Filter applications
     function filterApplications() {
       const statusFilter = document.getElementById('statusFilter').value;
       const dateFilter = document.getElementById('dateFilter').value;
       const searchTerm = document.getElementById('searchInput').value.toLowerCase();
 
-      let filteredFiles = allFiles;
+      let filteredFiles = [...allFiles];
 
-      // Apply status filter
       if (statusFilter !== 'all') {
         if (statusFilter === 'in_progress') {
-          filteredFiles = filteredFiles.filter(f => f.status === 'pending' && f.current_step !== 'pending');
+          filteredFiles = filteredFiles.filter(f => f.status === 'pending' && getApprovedCount(f) > 0);
+        } else if (statusFilter === 'pending') {
+          filteredFiles = filteredFiles.filter(f => f.status === 'pending' && getApprovedCount(f) === 0);
         } else {
           filteredFiles = filteredFiles.filter(f => f.status === statusFilter);
         }
       }
 
-      // Apply date filter
       if (dateFilter !== 'all') {
         const today = new Date();
-        const filterDate = new Date();
+        today.setHours(0, 0, 0, 0);
         
         if (dateFilter === 'today') {
           filteredFiles = filteredFiles.filter(f => {
             const fileDate = new Date(f.created_at);
-            return fileDate.toDateString() === today.toDateString();
+            fileDate.setHours(0, 0, 0, 0);
+            return fileDate.getTime() === today.getTime();
           });
         } else if (dateFilter === 'week') {
           const weekAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
@@ -660,41 +702,31 @@
         }
       }
 
-      // Apply search filter
       if (searchTerm) {
         filteredFiles = filteredFiles.filter(f => 
           f.title.toLowerCase().includes(searchTerm) ||
-          f.description?.toLowerCase().includes(searchTerm)
+          (f.description && f.description.toLowerCase().includes(searchTerm))
         );
       }
 
       displayFiles(filteredFiles);
     }
 
-    // View file details
     window.viewFileDetails = function(fileId) {
       window.location.href = `view_file.html?id=${fileId}`;
     };
 
-    // Track file
     window.trackFile = function(fileId) {
-      sessionStorage.setItem('trackingFileId', fileId);
-      window.location.href = `status.html?id=${fileId}`;
+      window.location.href = `view_file.html?id=${fileId}&tab=timeline`;
     };
 
-    // Event listeners for filters
     document.getElementById('statusFilter').addEventListener('change', filterApplications);
     document.getElementById('dateFilter').addEventListener('change', filterApplications);
     document.getElementById('searchInput').addEventListener('input', filterApplications);
 
-    // Initialize
     document.addEventListener('DOMContentLoaded', async () => {
-      await loadUserInfo();
       await loadMyApplications();
     });
   </script>
-  
-  <!-- Include auth.js for logout function -->
-  <script type="module" src="../js/auth.js"></script>
 </body>
 </html>

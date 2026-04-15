@@ -248,6 +248,16 @@
       transition: all 0.3s ease;
     }
 
+    .stat-card.filterable {
+      cursor: pointer;
+      border: 2px solid transparent;
+    }
+
+    .stat-card.active-filter {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.12);
+    }
+
     .stat-card:hover {
       transform: translateY(-5px);
       box-shadow: var(--shadow-hover);
@@ -716,7 +726,7 @@
     </div>
 
     <div class="stats-grid">
-      <div class="stat-card">
+      <div class="stat-card filterable active-filter" data-filter="pending">
         <div class="stat-icon">
           <i class="fas fa-clock"></i>
         </div>
@@ -726,7 +736,7 @@
         </div>
       </div>
       
-      <div class="stat-card">
+      <div class="stat-card filterable" data-filter="approved">
         <div class="stat-icon">
           <i class="fas fa-check-circle"></i>
         </div>
@@ -736,7 +746,7 @@
         </div>
       </div>
       
-      <div class="stat-card">
+      <div class="stat-card filterable" data-filter="rejected">
         <div class="stat-icon">
           <i class="fas fa-times-circle"></i>
         </div>
@@ -754,11 +764,11 @@
           Applications to Review
         </h2>
         <div class="filter-section">
-          <select class="filter-select" id="priorityFilter">
-            <option value="all">All Priority</option>
-            <option value="high">High</option>
-            <option value="medium">Medium</option>
-            <option value="low">Low</option>
+          <select class="filter-select" id="statusFilter">
+            <option value="all">All Status</option>
+            <option value="pending">Pending</option>
+            <option value="approved">Approved</option>
+            <option value="rejected">Rejected</option>
           </select>
         </div>
       </div>
@@ -770,14 +780,13 @@
               <th>Student</th>
               <th>Application</th>
               <th>Submitted</th>
-              <th>Priority</th>
               <th>Status</th>
               <th>Actions</th>
             </tr>
           </thead>
           <tbody id="applicationsTable">
             <tr>
-              <td colspan="6" class="empty-state">
+              <td colspan="5" class="empty-state">
                 <i class="fas fa-inbox"></i>
                 <p>No pending applications</p>
               </td>
@@ -835,9 +844,11 @@
   <script type="module">
     import { initRoleSwitcher } from '../js/components/RoleSwitcher.js';
     import { supabase } from '../js/supabase.js';
-    import { approveFile, rejectFile, loadPendingFiles } from '../js/officer_actions.js';
+    import { approveFile, rejectFile, loadOfficerDecisionStats, loadOfficerReviewFiles } from '../js/officer_actions.js';
     
     let currentApplicationId = null;
+    let allOfficerFiles = [];
+    let activeCardFilter = 'pending';
 
     async function loadUserData() {
       try {
@@ -867,55 +878,85 @@
 
     async function loadApplications() {
       try {
-        const applications = await loadPendingFiles();
+        const applications = await loadOfficerReviewFiles();
+        const stats = await loadOfficerDecisionStats();
+        allOfficerFiles = applications || [];
         
-        document.getElementById('pendingCount').textContent = applications?.length || 0;
-        document.getElementById('approvedCount').textContent = '0';
-        document.getElementById('rejectedCount').textContent = '0';
+        document.getElementById('pendingCount').textContent = allOfficerFiles.filter(a => a.officer_review_status === 'pending').length;
+        document.getElementById('approvedCount').textContent = stats.approved || 0;
+        document.getElementById('rejectedCount').textContent = stats.rejected || 0;
+        renderApplications();
+      } catch (error) {
+        console.error('Error:', error);
+      }
+    }
 
-        const tbody = document.getElementById('applicationsTable');
-        
-        if (!applications || applications.length === 0) {
+    function renderApplications() {
+      const tbody = document.getElementById('applicationsTable');
+      const statusFilter = document.getElementById('statusFilter')?.value || 'all';
+      const effectiveFilter = statusFilter === 'all' ? activeCardFilter : statusFilter;
+      const list = effectiveFilter === 'all'
+        ? allOfficerFiles
+        : allOfficerFiles.filter(file => file.officer_review_status === effectiveFilter);
+
+      if (!list || list.length === 0) {
           tbody.innerHTML = `
             <tr>
-              <td colspan="6" class="empty-state">
+              <td colspan="5" class="empty-state">
                 <i class="fas fa-check-circle"></i>
-                <p>No pending applications</p>
+                <p>No ${effectiveFilter} applications</p>
               </td>
             </tr>
           `;
           return;
         }
 
-        tbody.innerHTML = applications.map(app => `
+      tbody.innerHTML = list.map(app => {
+        const status = app.officer_review_status || 'pending';
+        const statusClass =
+          status === 'approved' ? 'status-approved' :
+          status === 'rejected' ? 'status-rejected' : 'status-pending';
+        const statusText =
+          status === 'approved' ? 'Approved' :
+          status === 'rejected' ? 'Rejected' : 'Pending';
+        const isPending = status === 'pending';
+        return `
           <tr>
             <td>${app.supervisor?.name || 'Unknown'}</td>
             <td>${app.title}</td>
             <td>${new Date(app.created_at).toLocaleDateString()}</td>
-            <td><span class="status-badge status-pending">Medium</span></td>
-            <td><span class="status-badge status-pending">Pending</span></td>
+            <td><span class="status-badge ${statusClass}">${statusText}</span></td>
             <td>
               <div class="action-btns">
                 <button class="btn-sm btn-view" onclick="viewApplication('${app.id}')">
                   <i class="fas fa-eye"></i>
                 </button>
-                <button class="btn-sm btn-approve" onclick="openReviewModal('${app.id}', '${app.title}', '${app.supervisor?.name || 'Unknown'}')">
-                  <i class="fas fa-check"></i>
-                </button>
-                <button class="btn-sm btn-reject" onclick="openRejectModal('${app.id}')">
-                  <i class="fas fa-times"></i>
-                </button>
+                ${isPending ? `
+                  <button class="btn-sm btn-approve" onclick="openReviewModal('${app.id}', '${app.title}', '${app.supervisor?.name || 'Unknown'}')">
+                    <i class="fas fa-check"></i>
+                  </button>
+                  <button class="btn-sm btn-reject" onclick="openRejectModal('${app.id}')">
+                    <i class="fas fa-times"></i>
+                  </button>
+                ` : ''}
               </div>
             </td>
           </tr>
-        `).join('');
-      } catch (error) {
-        console.error('Error:', error);
-      }
+        `;
+      }).join('');
+    }
+
+    function setCardFilter(filter) {
+      activeCardFilter = filter;
+      document.querySelectorAll('.stat-card.filterable').forEach((card) => {
+        card.classList.toggle('active-filter', card.getAttribute('data-filter') === filter);
+      });
+      document.getElementById('statusFilter').value = 'all';
+      renderApplications();
     }
 
     window.viewApplication = function(id) {
-      window.location.href = `view_file_details.html?id=${id}`;
+      window.location.href = `view_application.html?id=${id}`;
     };
 
     window.openReviewModal = function(id, title, sender) {
@@ -949,20 +990,31 @@
       }
       
       if (action === 'approve') {
-        const success = await approveFile(currentApplicationId, comments);
-        if (success) {
+        const result = await approveFile(currentApplicationId, comments);
+        if (result.success) {
           alert('✅ File approved!');
+        } else {
+          alert(`❌ Approve failed: ${result.message || 'Unknown error'}`);
+          return;
         }
       } else {
-        const success = await rejectFile(currentApplicationId, comments);
-        if (success) {
+        const result = await rejectFile(currentApplicationId, comments);
+        if (result.success) {
           alert('❌ File rejected');
+        } else {
+          alert(`❌ Reject failed: ${result.message || 'Unknown error'}`);
+          return;
         }
       }
       
       closeModal();
       loadApplications();
     };
+
+    document.getElementById('statusFilter').addEventListener('change', renderApplications);
+    document.querySelectorAll('.stat-card.filterable').forEach((card) => {
+      card.addEventListener('click', () => setCardFilter(card.getAttribute('data-filter')));
+    });
 
     await initRoleSwitcher();
     await loadUserData();

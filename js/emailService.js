@@ -146,7 +146,7 @@ export async function sendNewFileNotification(fileData, approverId) {
   );
 }
 
-export async function sendApprovalNotification(fileData, approverId, comments, nextStep) {
+export async function sendApprovalNotification(fileData, approverId, comments, nextStep, nextOfficerId = null) {
   const approver = await getUserEmail(approverId);
   const supervisor = await getUserEmail(fileData.supervisor_id);
   
@@ -164,8 +164,7 @@ export async function sendApprovalNotification(fileData, approverId, comments, n
   );
   
   // Notify next officer if exists
-  if (nextStep) {
-    const nextOfficerId = fileData[`${nextStep}_id`];
+  if (nextStep && nextOfficerId) {
     const nextOfficer = await getUserEmail(nextOfficerId);
     
     await sendEmail(

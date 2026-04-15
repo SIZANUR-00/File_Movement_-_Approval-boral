@@ -105,6 +105,10 @@
       border-left-color: #f39c12;
     }
 
+    .timeline-step.waiting {
+      border-left-color: #c0c9d6;
+    }
+
     .timeline-step.rejected {
       border-left-color: var(--red);
     }
@@ -124,6 +128,10 @@
 
     .step-icon .fa-clock {
       color: #f39c12;
+    }
+
+    .step-icon .fa-hourglass-half {
+      color: #6b7280;
     }
 
     .step-content {
@@ -193,6 +201,11 @@
     .status-rejected {
       background: #f8d7da;
       color: #721c24;
+    }
+
+    .status-in_progress {
+      background: #cce5ff;
+      color: #004085;
     }
 
     .file-actions {
@@ -291,17 +304,37 @@
       document.getElementById('submittedDate').textContent = new Date(file.created_at).toLocaleString();
       
       const statusElement = document.getElementById('fileStatus');
-      statusElement.textContent = file.status;
-      statusElement.className = `status-badge status-${file.status}`;
+      const statusTextMap = {
+        pending: 'In Progress',
+        approved: 'Approved',
+        rejected: 'Rejected'
+      };
+      const statusClassMap = {
+        pending: 'status-in_progress',
+        approved: 'status-approved',
+        rejected: 'status-rejected'
+      };
+      statusElement.textContent = statusTextMap[file.status] || file.status;
+      statusElement.className = `status-badge ${statusClassMap[file.status] || 'status-pending'}`;
       
       // Display timeline
       const steps = file.application_approvals.sort((a, b) => a.role_order - b.role_order);
       
       let timelineHtml = '';
       steps.forEach(step => {
-        let statusClass = step.status;
-        let icon = step.status === 'approved' ? 'fa-check-circle' : 
-                  step.status === 'rejected' ? 'fa-times-circle' : 'fa-clock';
+        const statusClass = step.status;
+        const icon =
+          step.status === 'approved' ? 'fa-check-circle'
+          : step.status === 'rejected' ? 'fa-times-circle'
+          : step.status === 'waiting' ? 'fa-hourglass-half'
+          : 'fa-clock';
+        const approverName = step.approver?.name || 'Not assigned';
+        const statusLabelMap = {
+          approved: 'Approved',
+          rejected: 'Rejected',
+          pending: 'Waiting for action',
+          waiting: 'Queued'
+        };
         
         timelineHtml += `
           <div class="timeline-step ${statusClass}">
@@ -310,7 +343,8 @@
             </div>
             <div class="step-content">
               <h4>${step.role.replace('_', ' ').toUpperCase()}</h4>
-              <p class="approver-name">${step.approver?.name || 'Pending'}</p>
+              <p class="approver-name">${approverName}</p>
+              <p class="approval-date"><strong>Status:</strong> ${statusLabelMap[step.status] || step.status}</p>
               ${step.approved_at ? `<p class="approval-date">${new Date(step.approved_at).toLocaleString()}</p>` : ''}
               ${step.comments ? `<div class="comments">"${step.comments}"</div>` : ''}
               ${step.status === 'approved' ? `

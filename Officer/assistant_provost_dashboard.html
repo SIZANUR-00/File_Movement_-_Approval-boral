@@ -804,7 +804,7 @@
   <script type="module">
     import { initRoleSwitcher } from '../js/components/RoleSwitcher.js';
     import { supabase } from '../js/supabase.js';
-    import { approveFile, rejectFile, loadPendingFiles } from '../js/officer_actions.js';
+    import { approveFile, rejectFile, loadPendingFiles, loadOfficerDecisionStats } from '../js/officer_actions.js';
     
     let currentApplicationId = null;
 
@@ -835,8 +835,10 @@
     async function loadApplications() {
       try {
         const applications = await loadPendingFiles();
+        const stats = await loadOfficerDecisionStats();
         
         document.getElementById('pendingCount').textContent = applications?.length || 0;
+        document.getElementById('approvedCount').textContent = stats.approved || 0;
         document.getElementById('fromTutorCount').textContent = applications?.length || 0;
 
         const tbody = document.getElementById('applicationsTable');
@@ -881,7 +883,7 @@
     }
 
     window.viewApplication = function(id) {
-      window.location.href = `view_file_details.html?id=${id}`;
+      window.location.href = `view_application.html?id=${id}`;
     };
 
     window.openReviewModal = function(id, title, sender) {
@@ -915,14 +917,20 @@
       }
       
       if (action === 'approve') {
-        const success = await approveFile(currentApplicationId, comments);
-        if (success) {
+        const result = await approveFile(currentApplicationId, comments);
+        if (result.success) {
           alert('✅ File approved!');
+        } else {
+          alert(`❌ Approve failed: ${result.message || 'Unknown error'}`);
+          return;
         }
       } else {
-        const success = await rejectFile(currentApplicationId, comments);
-        if (success) {
+        const result = await rejectFile(currentApplicationId, comments);
+        if (result.success) {
           alert('❌ File rejected');
+        } else {
+          alert(`❌ Reject failed: ${result.message || 'Unknown error'}`);
+          return;
         }
       }
       
