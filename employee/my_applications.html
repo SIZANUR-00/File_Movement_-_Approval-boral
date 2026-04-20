@@ -10,6 +10,7 @@
   <!-- Fixed Font Awesome CDN -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 
+  <link rel="stylesheet" href="../css/responsive-global.css">
   <style>
     :root {
       --accent:#282424;
@@ -211,6 +212,14 @@
     .action-btn.small {
       padding: 5px 10px;
       font-size: 0.8rem;
+    }
+
+    .action-btn.delete {
+      background: #e74c3c;
+    }
+
+    .action-btn.delete:hover {
+      background: #c0392b;
     }
 
     .actions-cell {
@@ -443,9 +452,11 @@
 
   <script type="module">
     import { supabase } from '../js/supabase.js';
+    import { deriveFileState, formatRoleName, getStatusPresentation } from '../js/file_status_helper.js';
 
     let allFiles = [];
     let officersCache = {};
+    let currentUserId = null;
 
     // Slideshow
     const slides = document.querySelectorAll('.slide');
@@ -465,6 +476,7 @@
     async function loadUserInfo() {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
+        currentUserId = user.id;
         const { data: profile } = await supabase
           .from('profiles')
           .select('name')
@@ -510,35 +522,21 @@
     }
 
     function getCurrentStepDisplay(file) {
-      if (file.status === 'approved') return '✅ Fully Approved';
-      if (file.status === 'rejected') return '❌ Rejected';
-      if (file.current_step === 'completed') return 'Completed';
-      
-      const stepMap = {
-        'house_tutor': '🏠 House Tutor',
-        'assistant_provost': '📘 Assistant Provost',
-        'provost': '🏛️ Provost',
-        'treasurer': '💰 Treasurer',
-        'vc': '🎓 Vice Chancellor',
-        'pending': '⏳ Initial Review'
-      };
-      
-      return stepMap[file.current_step] || file.current_step;
+      const derived = deriveFileState(file);
+      if (derived.status === 'approved') return '✅ Fully Approved';
+      if (derived.status === 'rejected') return '❌ Rejected';
+
+      return formatRoleName(derived.currentStep);
     }
 
     function getCurrentOfficerName(file) {
-      if (file.status === 'approved') return '-';
-      if (file.status === 'rejected') return '-';
-      if (file.current_step === 'completed') return '-';
+      const derived = deriveFileState(file);
+      if (derived.status === 'approved' || derived.status === 'rejected') return '-';
 
       const currentApproval = (file.application_approvals || []).find(a => a.status === 'pending');
       if (!currentApproval) return 'Not Assigned';
 
       return currentApproval.approver?.name || getOfficerName(currentApproval.role, currentApproval.approved_by);
-    }
-
-    function getApprovedCount(file) {
-      return (file.application_approvals || []).filter(a => a.status === 'approved').length;
     }
 
     async function loadMyApplications() {
@@ -590,10 +588,10 @@
 
     function updateStats() {
       const total = allFiles.length;
-      const pending = allFiles.filter(f => f.status === 'pending' && getApprovedCount(f) === 0).length;
-      const inProgress = allFiles.filter(f => f.status === 'pending' && getApprovedCount(f) > 0).length;
-      const approved = allFiles.filter(f => f.status === 'approved').length;
-      const rejected = allFiles.filter(f => f.status === 'rejected').length;
+      const pending = allFiles.filter((f) => deriveFileState(f).status === 'pending').length;
+      const inProgress = allFiles.filter((f) => deriveFileState(f).status === 'in_progress').length;
+      const approved = allFiles.filter((f) => deriveFileState(f).status === 'approved').length;
+      const rejected = allFiles.filter((f) => deriveFileState(f).status === 'rejected').length;
       
       document.getElementById('totalCount').textContent = total;
       document.getElementById('pendingCount').textContent = pending;
@@ -621,22 +619,10 @@
       emptyStateDiv.style.display = 'none';
 
       tbody.innerHTML = files.map(file => {
+        const derivedState = deriveFileState(file);
         const currentStep = getCurrentStepDisplay(file);
         const officerName = getCurrentOfficerName(file);
-        
-        let statusClass = 'status-pending';
-        let statusText = 'Pending';
-        
-        if (file.status === 'approved') {
-          statusClass = 'status-approved';
-          statusText = 'Approved';
-        } else if (file.status === 'rejected') {
-          statusClass = 'status-rejected';
-          statusText = 'Rejected';
-        } else if (file.current_step !== 'pending') {
-          statusClass = 'status-in-progress';
-          statusText = 'In Progress';
-        }
+        const statusMeta = getStatusPresentation(derivedState.status);
 
         const stepDisplay = officerName !== 'Not Assigned' && officerName !== '-'
           ? `${currentStep}<br><small style="font-size: 10px; color: #666;">(${officerName})</small>`
@@ -650,7 +636,7 @@
             <td><strong>${escapeHtml(file.title)}</strong></td>
             <td>${formatDate(file.created_at)}</td>
             <td>${stepDisplay}</td>
-            <td><span class="status-badge ${statusClass}">${statusText}</span></td>
+            <td><span class="status-badge ${statusMeta.className}">${statusMeta.label}</span></td>
             <td>
               <div class="actions-cell">
               <button class="action-btn small" onclick="window.viewFileDetails('${file.id}')">
@@ -658,6 +644,9 @@
               </button>
               <button class="action-btn small" onclick="window.trackFile('${file.id}')">
                 <i class="fas fa-map-marker-alt"></i> Track
+              </button>
+              <button class="action-btn small delete" onclick="window.deleteMyFile('${file.id}', '${escapeHtml(file.title)}')">
+                <i class="fas fa-trash"></i> Delete
               </button>
               </div>
             </td>
@@ -674,13 +663,7 @@
       let filteredFiles = [...allFiles];
 
       if (statusFilter !== 'all') {
-        if (statusFilter === 'in_progress') {
-          filteredFiles = filteredFiles.filter(f => f.status === 'pending' && getApprovedCount(f) > 0);
-        } else if (statusFilter === 'pending') {
-          filteredFiles = filteredFiles.filter(f => f.status === 'pending' && getApprovedCount(f) === 0);
-        } else {
-          filteredFiles = filteredFiles.filter(f => f.status === statusFilter);
-        }
+        filteredFiles = filteredFiles.filter((f) => deriveFileState(f).status === statusFilter);
       }
 
       if (dateFilter !== 'all') {
@@ -718,6 +701,36 @@
 
     window.trackFile = function(fileId) {
       window.location.href = `view_file.html?id=${fileId}&tab=timeline`;
+    };
+
+    window.deleteMyFile = async function(fileId, title) {
+      if (!currentUserId) return;
+      const confirmed = window.confirm(`Are you sure you want to delete "${title}"?`);
+      if (!confirmed) return;
+
+      try {
+        const { error: approvalDeleteError } = await supabase
+          .from('application_approvals')
+          .delete()
+          .eq('application_id', fileId);
+
+        if (approvalDeleteError) throw approvalDeleteError;
+
+        const { error: fileDeleteError } = await supabase
+          .from('files')
+          .delete()
+          .eq('id', fileId)
+          .eq('supervisor_id', currentUserId);
+
+        if (fileDeleteError) throw fileDeleteError;
+
+        allFiles = allFiles.filter((file) => file.id !== fileId);
+        updateStats();
+        filterApplications();
+      } catch (error) {
+        console.error('Delete failed:', error);
+        alert(`Failed to delete file: ${error.message}`);
+      }
     };
 
     document.getElementById('statusFilter').addEventListener('change', filterApplications);

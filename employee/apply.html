@@ -3,1018 +3,1240 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Apply Application | File Movement & Approval System</title>
+  <title>Apply | File Movement & Approval System</title>
 
   <!-- Fonts & Icons -->
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
-  <script src="https://kit.fontawesome.com/a2e0f1e6b1.js" crossorigin="anonymous"></script>
-
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  
+  <link rel="stylesheet" href="../css/responsive-global.css">
   <style>
-    :root {
-      --accent:#282424;
-      --accent-2:#3f8fd5;
-      --muted:#243557;
-      --gold:#ffce00;
-      --green:#3cdd77bd;
-      --container-width:1200px;
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
     }
 
-    *{box-sizing:border-box;margin:0;padding:0;font-family:'Poppins',sans-serif}
-    body{
-      background:#f6f7fb;
-      color:#0b1720;
-      overflow-x:hidden;
-      min-height:100vh;
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #f0f2f5;
+      min-height: 100vh;
+      color: #1a2c3e;
     }
 
-    /* ---------- HEADER ---------- */
-    header.topbar{
-      position:fixed;top:0;left:0;right:0;z-index:60;
-      display:flex;justify-content:center;pointer-events:none;
-    }
-    header .bar{
-      pointer-events:auto;
-      width:100%;max-width:var(--container-width);
-      display:flex;align-items:center;justify-content:space-between;
-      gap:16px;padding:18px 24px;margin:16px;
-      background:linear-gradient(180deg,rgba(255,255,255,0.08),rgba(255,255,255,0.02));
-      border-radius:12px;
-      backdrop-filter:blur(10px) saturate(120%);
-      box-shadow:0 6px 24px rgba(6,12,34,0.12);
+    /* Header Styles */
+    .navbar {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      border-bottom: 1px solid rgba(0, 0, 0, 0.05);
     }
 
-    .brand{display:flex;align-items:center;gap:12px}
-    .brand .logo{
-      width:44px;height:44px;border-radius:8px;
-      overflow:hidden;background:linear-gradient(135deg,var(--accent),var(--accent-2));
-      display:flex;align-items:center;justify-content:center;
-    }
-    .brand .logo img{width:100%;height:100%;object-fit:contain}
-    .brand h1{color:#b29315;font-size:1.1rem;font-weight:600;text-shadow:0 2px 8px rgba(62, 8, 8, 0.35)}
-
-    nav.topnav{display:flex;align-items:center;gap:14px}
-    nav.topnav a{
-      color:#bf3737;text-decoration:none;font-weight:600;
-      padding:8px 14px;border-radius:8px;transition:0.25s;
-    }
-    nav.topnav a:hover{background:rgba(255,255,255,0.15);transform:translateY(-2px)}
-
-    .user-info{
-      display:flex;align-items:center;gap:20px;color:#129922;font-weight:900;
-    }
-    .user-info i{font-size:20px}
-    .logout-btn{
-      background:var(--gold);color:#000;border:none;
-      padding:8px 14px;border-radius:8px;cursor:pointer;
-      font-weight:600;display:flex;align-items:center;gap:6px;
-      box-shadow:0 6px 18px rgba(255,206,0,0.25);
-      transition:0.2s;
-    }
-    .logout-btn:hover{background:#ffd633;transform:translateY(-2px)}
-
-    /* ---------- HERO SLIDES ---------- */
-    .hero{
-      position:relative;
-      height:40vh;
-      min-height:300px;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      text-align:center;
-      overflow:hidden;
-      margin-top:100px;
-    }
-    .slides{
-      position:absolute;inset:0;z-index:0;
-    }
-    .slide{
-      position:absolute;inset:0;
-      background-size:cover;background-position:center;
-      opacity:0;transform:scale(1.03);
-      transition:opacity 1.2s ease, transform 8s ease;
-    }
-    .slide.active{opacity:1;transform:scale(1)}
-    .hero::after{
-      content:"";
-      position:absolute;inset:0;z-index:1;
-      background:linear-gradient(180deg,rgba(2,6,23,0.45),rgba(2,6,23,0.6));
-    }
-    .hero-inner{
-      position:relative;z-index:2;
-      color:#fff;
-      text-align:center;
-      padding:20px;
-    }
-    .hero-inner h2{
-      font-size:2.2rem;
-      color:#ffce00;
-      margin-bottom:10px;
-      text-shadow: 0 2px 10px rgba(0,0,0,0.5);
-    }
-    .hero-inner p{
-      font-size:1.05rem;
-      color:#d9f0ff;
-      font-weight:500;
-      text-shadow: 0 1px 5px rgba(0,0,0,0.4);
+    .nav-container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
     }
 
-    /* ---------- MAIN CONTENT ---------- */
-    main{
-      max-width:var(--container-width);
-      margin:0 auto;
-      padding:40px 24px 60px;
-    }
-
-    .content-box{
-      background:#fff;
-      border-radius:14px;
-      padding:28px 30px;
-      box-shadow:0 10px 40px rgba(0,0,0,0.05);
-      margin-top:40px;
-    }
-
-    .content-box h1{
-      color:var(--accent-2);
-      font-size:1.8rem;
-      margin-bottom:20px;
-      text-align:center;
-    }
-
-    form{
-      display:flex;
-      flex-direction:column;
-      gap:20px;
-    }
-
-    .form-group{
-      display:flex;
-      flex-direction:column;
-      gap:8px;
-    }
-
-    .form-group label{
-      font-weight:600;
-      color:var(--accent-2);
-      font-size:1rem;
-    }
-
-    .form-group input, .form-group textarea, .form-group select{
-      padding:12px 16px;
-      border:1px solid rgba(11,23,32,0.15);
-      border-radius:8px;
-      font-family:'Poppins',sans-serif;
-      font-size:15px;
-      transition:border-color 0.2s ease, box-shadow 0.2s ease;
-    }
-
-    .form-group input:focus, .form-group textarea:focus, .form-group select:focus{
-      outline:none;
-      border-color:var(--accent-2);
-      box-shadow:0 0 0 3px rgba(63,143,213,0.1);
-    }
-
-    .role-wrapper{
-      display:flex;
-      align-items:center;
-      gap:12px;
-      margin-bottom:12px;
-    }
-
-    .role-wrapper select{
-      flex:1;
-    }
-
-    .remove-btn{
-      background:#e74c3c;
-      color:#fff;
-      border:none;
-      padding:8px 14px;
-      border-radius:6px;
-      cursor:pointer;
-      font-weight:600;
-      transition:0.2s;
-    }
-
-    .remove-btn:hover{
-      background:#c0392b;
-      transform:translateY(-2px);
-    }
-
-    .submit-btn{
-      background:var(--accent-2);
-      color:#fff;
-      border:none;
-      padding:14px 24px;
-      border-radius:8px;
-      cursor:pointer;
-      font-weight:600;
-      font-size:16px;
-      transition:0.2s;
-      margin-top:10px;
-      align-self:center;
-      width:200px;
-    }
-
-    .submit-btn:hover{
-      background:#1e6fb0;
-      transform:translateY(-2px);
-    }
-
-    /* Role Selection Styles */
-    .role-section {
-      margin-bottom: 25px;
-      padding: 20px;
-      background: #f8fafc;
-      border-radius: 10px;
-      border: 1px solid #e2e8f0;
-    }
-    
-    .role-title {
-      font-size: 1.2rem;
-      font-weight: 600;
-      color: var(--accent-2);
-      margin-bottom: 15px;
+    .logo {
       display: flex;
       align-items: center;
-      gap: 10px;
-    }
-    
-    .role-title i {
-      color: var(--accent-2);
+      gap: 12px;
     }
 
-    /* House Tutor Selection */
-    .tutor-selection {
-      margin-top: 10px;
-      padding: 12px;
-      background: #fff;
-      border-radius: 6px;
-      border: 1px solid #e2e8f0;
-    }
-
-    /* Add Role Button */
-    .add-role-btn {
-      background: var(--green);
-      color: #000;
-      border: none;
-      padding: 10px 16px;
-      border-radius: 6px;
-      cursor: pointer;
-      font-weight: 600;
-      margin-top: 10px;
-      display: inline-flex;
+    .logo-icon {
+      width: 45px;
+      height: 45px;
+      background: linear-gradient(135deg, #1e5799, #2b8c5e);
+      border-radius: 12px;
+      display: flex;
       align-items: center;
-      gap: 8px;
-      transition: all 0.2s ease;
-    }
-    
-    .add-role-btn:hover {
-      background: #2ecc71;
-      transform: translateY(-2px);
+      justify-content: center;
+      font-size: 1.5rem;
+      color: white;
     }
 
-    /* ---------- FOOTER ---------- */
-    footer{
-      text-align:center;
-      color:var(--muted);
-      margin-top:60px;
-      padding:20px;
-      font-size:14px;
+    .logo h1 {
+      font-size: 1.3rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, #1e5799, #2b8c5e);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
     }
 
-    @media (max-width:768px){
-      .brand h1{font-size:1rem}
-      .hero-inner h2{font-size:1.8rem}
-      .role-wrapper{
-        flex-direction:column;
-        align-items:stretch;
-      }
-      .remove-btn{
-        align-self:flex-end;
-        width:120px;
-      }
+    .nav-links {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .nav-links a {
+      text-decoration: none;
+      padding: 0.6rem 1.2rem;
+      border-radius: 10px;
+      color: #4a5568;
+      font-weight: 500;
+      transition: all 0.3s ease;
+    }
+
+    .nav-links a:hover, .nav-links a.active {
+      background: linear-gradient(135deg, #1e5799, #2b8c5e);
+      color: white;
+    }
+
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      background: #f0f2f5;
+      padding: 0.5rem 1.2rem;
+      border-radius: 40px;
+    }
+
+    .logout-btn {
+      background: #ef4444;
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      color: white;
+      cursor: pointer;
+      font-weight: 500;
+      transition: all 0.3s ease;
+    }
+
+    .hero {
+      background: linear-gradient(135deg, #1e5799, #2b8c5e);
+      padding: 2rem;
+      text-align: center;
+      color: white;
+    }
+
+    .hero h2 {
+      font-size: 1.8rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+    }
+
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+
+    .form-card {
+      background: white;
+      border-radius: 20px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+      overflow: hidden;
+    }
+
+    .form-header {
+      background: linear-gradient(135deg, #f8f9fa, #ffffff);
+      padding: 1.5rem;
+      border-bottom: 2px solid #e9ecef;
+      text-align: center;
+    }
+
+    .form-header h3 {
+      font-size: 1.3rem;
+      color: #1e5799;
+    }
+
+    .form-body {
+      padding: 2rem;
+    }
+
+    /* Tab Styles */
+    .tabs {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 2rem;
+      border-bottom: 2px solid #e2e8f0;
+    }
+
+    .tab-btn {
+      background: none;
+      border: none;
+      padding: 12px 24px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      color: #718096;
+      transition: all 0.3s ease;
+      position: relative;
+    }
+
+    .tab-btn.active {
+      color: #1e5799;
+    }
+
+    .tab-btn.active::after {
+      content: '';
+      position: absolute;
+      bottom: -2px;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: #1e5799;
+      border-radius: 3px;
+    }
+
+    .tab-btn i {
+      margin-right: 8px;
+    }
+
+    .tab-pane {
+      display: none;
+      animation: fadeIn 0.3s ease;
+    }
+
+    .tab-pane.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Form Styles */
+    .form-group {
+      margin-bottom: 1.5rem;
+    }
+
+    .form-group label {
+      display: block;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+      color: #2d3748;
+    }
+
+    .form-group input, 
+    .form-group textarea, 
+    .form-group select {
+      width: 100%;
+      padding: 0.8rem 1rem;
+      border: 2px solid #e2e8f0;
+      border-radius: 10px;
+      font-family: inherit;
+      transition: all 0.3s ease;
+    }
+
+    .form-group input:focus, 
+    .form-group textarea:focus, 
+    .form-group select:focus {
+      outline: none;
+      border-color: #1e5799;
+      box-shadow: 0 0 0 3px rgba(30, 87, 153, 0.1);
+    }
+
+    /* Items Table */
+    .items-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+    }
+
+    .items-table th, .items-table td {
+      border: 1px solid #e2e8f0;
+      padding: 10px;
+      text-align: left;
+    }
+
+    .items-table th {
+      background: #f8fafc;
+      font-weight: 600;
+    }
+
+    .items-table input {
+      width: 100%;
+      padding: 6px;
+      border: 1px solid #e2e8f0;
+      border-radius: 5px;
+    }
+
+    .add-row-btn {
+      background: #2b8c5e;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      margin-bottom: 1rem;
+    }
+
+    .remove-row-btn {
+      background: #dc2626;
+      color: white;
+      border: none;
+      padding: 4px 8px;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    .total-amount {
+      text-align: right;
+      font-size: 1.2rem;
+      font-weight: bold;
+      margin-top: 1rem;
+      padding: 10px;
+      background: #f8fafc;
+      border-radius: 8px;
+    }
+
+    /* Approval Flow Styles */
+    .approval-section {
+      background: #f8fafc;
+      border-radius: 16px;
+      padding: 1.5rem;
+      margin-top: 1.5rem;
+    }
+
+    .step-card {
+      background: white;
+      border-radius: 12px;
+      padding: 1rem;
+      margin-bottom: 1rem;
+      border-left: 4px solid #2b8c5e;
+    }
+
+    .step-header {
+      margin-bottom: 10px;
+    }
+
+    .step-controls {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .step-controls select {
+      flex: 1;
+      min-width: 180px;
+      padding: 8px;
+    }
+
+    .remove-step {
+      background: #fee2e2;
+      color: #dc2626;
+      border: none;
+      padding: 8px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    .add-step-btn {
+      background: #1e5799;
+      color: white;
+      border: none;
+      padding: 10px;
+      border-radius: 8px;
+      cursor: pointer;
+      width: 100%;
+      margin-top: 1rem;
+    }
+
+    .submit-btn {
+      background: linear-gradient(135deg, #2b8c5e, #1e5799);
+      color: white;
+      border: none;
+      padding: 1rem;
+      width: 100%;
+      border-radius: 12px;
+      font-size: 1.1rem;
+      font-weight: 700;
+      cursor: pointer;
+      margin-top: 1.5rem;
+    }
+
+    .submit-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .file-upload-area {
+      border: 2px dashed #e2e8f0;
+      border-radius: 12px;
+      padding: 2rem;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .file-upload-area:hover {
+      border-color: #1e5799;
+      background: #f8fafc;
+    }
+
+    .file-upload-area i {
+      font-size: 3rem;
+      color: #cbd5e0;
+      margin-bottom: 1rem;
+    }
+
+    footer {
+      text-align: center;
+      padding: 2rem;
+      color: #718096;
     }
   </style>
 </head>
-
 <body>
-  <!-- HEADER -->
-  <header class="topbar">
-    <div class="bar">
-      <div class="brand">
-        <div class="logo" title="BAUET">
-          <img src="/image/bauet-logo2.png" alt="BAUET Logo" style="width:100%; height:100%; object-fit:contain;">
-        </div>
-        <div style="line-height:1;">
-          <h1>File Movement & Approval</h1>
-          <small>Online Approval System</small>
-        </div>
-      </div>
 
-      <nav class="topnav">
-        <a href="e_dashboard.html"><i class="fas fa-home"></i> Dashboard</a>
-        <a href="apply.html" style="background:rgba(255,255,255,0.15);"><i class="fas fa-paper-plane"></i> Apply</a>
-        <a href="my_applications.html"><i class="fas fa-folder-open"></i> My Files</a>
-        <a href="status.html"><i class="fas fa-search"></i> Tracking</a>
-        <a href="notifications.html"><i class="fas fa-bell"></i> Notifications</a>
-      </nav>
-
-      <div class="user-info">
-        <i class="fas fa-user-circle"></i>
-        <span>Sizanur</span>
-        <button class="logout-btn" onclick="window.location.href='/File_Movement_-_Approval/index.html'">
-          <i class="fas fa-sign-out-alt"></i> Logout
-        </button>
-      </div>
+<nav class="navbar">
+  <div class="nav-container">
+    <div class="logo">
+      <div class="logo-icon"><i class="fas fa-file-alt"></i></div>
+      <h1>BAUET - File Movement & Approval</h1>
     </div>
-  </header>
-
-  <!-- HERO SECTION -->
-  <section class="hero" id="hero">
-    <div class="slides" id="slides">
-      <div class="slide active" style="background-image:url('/image/BAUET-Campus.jpg')"></div>
-      <div class="slide" style="background-image:url('/image/bauet.jpeg')"></div>
-      <div class="slide" style="background-image:url('/image/boral_back.jpeg')"></div>
-      <div class="slide" style="background-image:url('/image/acc_buli.jpeg')"></div>
+    <div class="nav-links">
+      <a href="e_dashboard.html"><i class="fas fa-home"></i> Dashboard</a>
+      <a href="apply.html" class="active"><i class="fas fa-paper-plane"></i> Apply</a>
+      <a href="my_applications.html"><i class="fas fa-folder-open"></i> My Files</a>
+      <a href="notifications.html"><i class="fas fa-bell"></i> Notifications</a>
     </div>
-
-    <div class="hero-inner">
-      <h2>Apply for File Movement</h2>
-      <p>Submit your application and track its progress through departments</p>
+    <div class="user-info">
+      <i class="fas fa-user-circle"></i>
+      <span id="userName">Loading...</span>
+      <button class="logout-btn" id="logoutBtn">Logout</button>
     </div>
-  </section>
-
-  <!-- MAIN CONTENT -->
-  <main>
-    <div class="content-box">
-      <h1>New Application Form</h1>
-      
-      <form id="applicationForm">
-        <div class="form-group">
-          <label for="applicationTitle">Application Title</label>
-          <input type="text" id="applicationTitle" placeholder="Enter application title" required>
-        </div>
-
-        <div class="form-group">
-          <label for="applicationDescription">Description</label>
-          <textarea id="applicationDescription" placeholder="Enter details about your application..." rows="4" required></textarea>
-        </div>
-
-        <div class="form-group">
-          <label for="fileUpload">Upload File</label>
-          <input type="file" id="fileUpload" required>
-        </div>
-
-        <!-- Role Selection Section -->
-        <div class="role-section">
-          <div class="role-title">
-            <i class="fas fa-user-tie"></i>
-            Select Approving Officers (Fixed Order)
-          </div>
-          
-          <div class="form-group">
-            <label for="house_tutor_id">1. House Tutor *</label>
-            <select id="house_tutor_id" required>
-              <option value="">Select House Tutor</option>
-            </select>
-          </div>
-
-          <div class="form-group">
-            <label for="assistant_provost_id">2. Assistant Provost *</label>
-            <select id="assistant_provost_id" required>
-              <option value="">Select Assistant Provost</option>
-            </select>
-          </div>
-
-          <div class="form-group">
-            <label for="provost_id">3. Provost *</label>
-            <select id="provost_id" required>
-              <option value="">Select Provost</option>
-            </select>
-          </div>
-
-          <div class="form-group">
-            <label for="treasurer_id">4. Treasurer *</label>
-            <select id="treasurer_id" required>
-              <option value="">Select Treasurer</option>
-            </select>
-          </div>
-
-  <div class="form-group">
-    <label for="vc_id">5. Vice Chancellor *</label>
-    <select id="vc_id" required>
-      <option value="">Select Vice Chancellor</option>
-    </select>
   </div>
+</nav>
+
+<div class="hero">
+  <h2><i class="fas fa-file-invoice"></i> নতুন আবেদন</h2>
+  <p>ফর্ম পূরণ করুন অথবা ফাইল আপলোড করুন</p>
 </div>
 
-          <!-- Add Next Role Button -->
-          <button type="button" class="add-role-btn" id="addRoleBtn" onclick="addNextRole()">
-            <i class="fas fa-plus"></i> Add Next Approval Role
+<div class="container">
+  <div class="form-card">
+    <div class="form-header">
+      <h3><i class="fas fa-upload"></i> আবেদনের ধরণ নির্বাচন করুন</h3>
+    </div>
+    <div class="form-body">
+      <!-- Tabs -->
+      <div class="tabs">
+        <button class="tab-btn active" data-tab="form-tab">
+          <i class="fas fa-edit"></i> ফর্ম পূরণ করুন
+        </button>
+        <button class="tab-btn" data-tab="upload-tab">
+          <i class="fas fa-upload"></i> ফাইল আপলোড করুন
+        </button>
+      </div>
+
+      <!-- Tab 1: Form Based Application -->
+      <div id="form-tab" class="tab-pane active">
+        <form id="requisitionForm">
+          <div class="form-group">
+            <label>দপ্তর/হল</label>
+            <input type="text" id="department" value="বরাল হল/২০২৫" readonly>
+          </div>
+
+          <div class="form-group">
+            <label>তারিখ</label>
+            <input type="date" id="date" required>
+          </div>
+
+          <label>পণ্যের বিবরণ</label>
+          <table class="items-table" id="itemsTable">
+            <thead>
+              <tr>
+                <th>ক্রম নং</th>
+                <th>বিবরণ</th>
+                <th>পরিমাণ</th>
+                <th>দর (টাকা)</th>
+                <th>মোট (টাকা)</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="itemsBody">
+              <tr>
+                <td>১</td>
+                <td><input type="text" class="item-desc" placeholder="পণ্যের নাম"></td>
+                <td><input type="number" class="item-qty" value="1" min="1"></td>
+                <td><input type="number" class="item-price" value="0" min="0"></td>
+                <td><input type="text" class="item-total" readonly style="background:#f8fafc;"></td>
+                <td><button type="button" class="remove-row-btn" onclick="removeRow(this)">✖</button></td>
+              </tr>
+            </tbody>
+          </table>
+          
+          <button type="button" class="add-row-btn" onclick="addRow()">
+            <i class="fas fa-plus"></i> আরও যোগ করুন
           </button>
-        </div>
 
-        <button type="submit" class="submit-btn">Submit Application</button>
-      </form>
-    </div>
+          <div class="total-amount">
+            <strong>মোট টাকা:</strong> <span id="grandTotal">০</span> টাকা
+            <br>
+            <small>কথায়: <span id="amountInWords">শূন্য টাকা মাত্র</span></small>
+          </div>
 
-    <!-- Role Selection Section - Dynamic Order -->
-<div class="role-section">
-  <div class="role-title">
-    <i class="fas fa-sitemap"></i>
-    Define Your Approval Flow (Set the Order)
-  </div>
-  
-  <div style="background: #e8f4fd; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
-    <p style="color: var(--accent-2); font-weight: 600; margin-bottom: 5px;">
-      <i class="fas fa-info-circle"></i> How it works:
-    </p>
-    <p style="font-size: 0.9rem;">
-      আপনি নিচে যেভাবে অফিসারদের সাজাবেন, ফাইল সেভাবেই একের পর এক এপ্রুভ হতে যাবে।
-    </p>
-  </div>
-  
-  <!-- Dynamic Approval Steps Container -->
-  <div id="approvalStepsContainer">
-    <div class="approval-step-item" data-step="1">
-      <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
-        <span style="background: var(--accent-2); color: white; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold;">1</span>
-        <h4 style="margin: 0; color: var(--accent-2);">First Approver</h4>
+          <!-- Approval Flow -->
+          <div class="approval-section">
+            <div class="section-title">
+              <i class="fas fa-sitemap"></i>
+              <strong>অনুমোদন ক্রম (Approval Flow)</strong>
+            </div>
+
+            <div id="stepsContainer">
+              <div class="step-card" data-step="1">
+                <div class="step-header">
+                  <strong>Step 1: প্রথম অনুমোদনকারী</strong>
+                </div>
+                <div class="step-controls">
+                  <select class="role-select" data-step="1">
+                    <option value="">-- ভূমিকা নির্বাচন করুন --</option>
+                    <option value="house_tutor">হাউস টিউটর</option>
+                    <option value="assistant_provost">সহকারী প্রক্টর</option>
+                    <option value="provost">প্রক্টর</option>
+                    <option value="treasurer">কোষাধ্যক্ষ</option>
+                    <option value="vc">উপাচার্য</option>
+                  </select>
+                  <select class="officer-select" data-step="1" disabled>
+                    <option value="">-- প্রথমে ভূমিকা নির্বাচন করুন --</option>
+                  </select>
+                  <button type="button" class="remove-step" data-step="1" style="display: none;">Remove</button>
+                </div>
+              </div>
+            </div>
+
+            <button type="button" class="add-step-btn" id="addStepBtn">
+              + পরবর্তী অনুমোদনকারী যোগ করুন
+            </button>
+          </div>
+
+          <button type="submit" class="submit-btn" id="formSubmitBtn" disabled>
+            <i class="fas fa-paper-plane"></i> ফর্ম জমা দিন
+          </button>
+        </form>
       </div>
-      <div style="display: flex; gap: 10px;">
-        <select class="role-select" id="role_1" onchange="handleRoleChange(1)" required style="flex: 2; padding: 12px; border: 2px solid var(--accent-2); border-radius: 8px;">
-          <option value="">-- Select Role --</option>
-          <option value="house_tutor">House Tutor</option>
-          <option value="assistant_provost">Assistant Provost</option>
-          <option value="provost">Provost</option>
-          <option value="treasurer">Treasurer</option>
-          <option value="vc">Vice Chancellor</option>
-        </select>
-        
-        <select class="officer-select" id="officer_1" style="flex: 3; padding: 12px; border: 2px solid var(--accent-2); border-radius: 8px;" disabled required>
-          <option value="">-- First Select Role --</option>
-        </select>
-        
-        <button type="button" class="remove-btn" onclick="removeStep(1)" style="display: none;">
-          <i class="fas fa-trash"></i>
-        </button>
+
+      <!-- Tab 2: File Upload Based Application -->
+      <div id="upload-tab" class="tab-pane">
+        <form id="uploadForm">
+          <div class="form-group">
+            <label>আবেদনের শিরোনাম</label>
+            <input type="text" id="fileTitle" placeholder="যেমন: ছাত্রাবাস সংস্কার কাজের প্রস্তাব" required>
+          </div>
+
+          <div class="form-group">
+            <label>বিবরণ</label>
+            <textarea id="fileDescription" rows="4" placeholder="আবেদনের বিস্তারিত বিবরণ লিখুন..." required></textarea>
+          </div>
+
+          <div class="form-group">
+            <label>ফাইল আপলোড করুন</label>
+            <div class="file-upload-area" onclick="document.getElementById('fileInput').click()">
+              <i class="fas fa-cloud-upload-alt"></i>
+              <p>ফাইল আপলোড করতে ক্লিক করুন</p>
+              <small style="color: #718096;">PDF, DOC, DOCX, JPG, PNG (Max 10MB)</small>
+              <input type="file" id="fileInput" style="display: none;" accept=".pdf,.doc,.docx,.jpg,.png">
+            </div>
+            <div id="fileInfo" style="margin-top: 10px; display: none;">
+              <i class="fas fa-file"></i> <span id="fileName"></span>
+              <button type="button" onclick="clearFile()" style="margin-left: 10px; color: red;">✖</button>
+            </div>
+          </div>
+
+          <!-- Approval Flow (Same as above) -->
+          <div class="approval-section">
+            <div class="section-title">
+              <i class="fas fa-sitemap"></i>
+              <strong>অনুমোদন ক্রম (Approval Flow)</strong>
+            </div>
+
+            <div id="stepsContainer2">
+              <div class="step-card" data-step="1">
+                <div class="step-header">
+                  <strong>Step 1: প্রথম অনুমোদনকারী</strong>
+                </div>
+                <div class="step-controls">
+                  <select class="role-select-upload" data-step="1">
+                    <option value="">-- ভূমিকা নির্বাচন করুন --</option>
+                    <option value="house_tutor">হাউস টিউটর</option>
+                    <option value="assistant_provost">সহকারী প্রক্টর</option>
+                    <option value="provost">প্রক্টর</option>
+                    <option value="treasurer">কোষাধ্যক্ষ</option>
+                    <option value="vc">উপাচার্য</option>
+                  </select>
+                  <select class="officer-select-upload" data-step="1" disabled>
+                    <option value="">-- প্রথমে ভূমিকা নির্বাচন করুন --</option>
+                  </select>
+                  <button type="button" class="remove-step-upload" data-step="1" style="display: none;">Remove</button>
+                </div>
+              </div>
+            </div>
+
+            <button type="button" class="add-step-btn" id="addStepBtn2">
+              + পরবর্তী অনুমোদনকারী যোগ করুন
+            </button>
+          </div>
+
+          <button type="submit" class="submit-btn" id="uploadSubmitBtn" disabled>
+            <i class="fas fa-upload"></i> ফাইল জমা দিন
+          </button>
+        </form>
       </div>
     </div>
-  </div>
-  
-  <!-- Add Step Button -->
-  <button type="button" class="add-role-btn" id="addStepBtn" onclick="addApprovalStep()">
-    <i class="fas fa-plus-circle"></i> Add Next Approver
-  </button>
-  
-  <!-- Summary -->
-  <div style="background: #e8f4fd; padding: 15px; border-radius: 8px; margin-top: 20px;">
-    <p style="color: var(--accent-2); font-weight: 600;">
-      <i class="fas fa-check-circle"></i> Your Approval Flow:
-    </p>
-    <p id="selectedPath" style="font-size: 1rem; color: #333; font-weight: 500;">
-      <span style="color: #999;">No approvers selected yet</span>
-    </p>
   </div>
 </div>
 
-<style>
-  .approval-step-item {
-    background: #f9f9f9;
-    padding: 20px;
-    border-radius: 8px;
-    margin-bottom: 15px;
-    border-left: 4px solid var(--accent-2);
-    transition: all 0.3s ease;
-  }
-  
-  .approval-step-item:hover {
-    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-  }
-  
-  .remove-btn {
-    background: #e74c3c;
-    color: white;
-    border: none;
-    padding: 0 15px;
-    border-radius: 6px;
-    cursor: pointer;
-    font-weight: 600;
-    transition: all 0.3s ease;
-  }
-  
-  .remove-btn:hover {
-    background: #c0392b;
-    transform: translateY(-2px);
-  }
-  
-  .add-role-btn {
-    background: var(--green);
-    color: #000;
-    border: none;
-    padding: 12px 20px;
-    border-radius: 8px;
-    cursor: pointer;
-    font-weight: 600;
-    font-size: 1rem;
-    margin: 10px 0;
-    transition: all 0.3s ease;
-    width: 100%;
-  }
-  
-  .add-role-btn:hover {
-    background: #2ecc71;
-    transform: translateY(-2px);
-  }
-</style>
-  </main>
+<footer>
+  &copy; 2025 BAUET - File Movement & Approval System
+</footer>
 
-  <footer>
-    &copy; 2025 File Movement & Approval System — Developed by THUNDER-BOND
-  </footer>
+<script type="module">
+  import { supabase } from '../js/supabase.js';
 
-  <script>
-    // Slideshow transition
-    const slides = document.querySelectorAll('.slide');
-    let idx = 0;
-    setInterval(() => {
-      slides[idx].classList.remove('active');
-      idx = (idx + 1) % slides.length;
-      slides[idx].classList.add('active');
-    }, 5000);
-
-    // All available house tutors
-    const allHouseTutors = [
-      { value: 'tutor1', text: 'Md. Zihad ali' },
-      { value: 'tutor2', text: 'Prof. Akash ahmed' },
-      { value: 'tutor3', text: 'Dr. Abdullah Al Mamun' },
-      { value: 'tutor4', text: 'Prof. Nahin hossain' },
-      { value: 'tutor5', text: 'Dr. Rahim Uddin ' },
-      { value: 'tutor6', text: 'Prof. abdul halim' }
-    ];
-
-    let selectedHouseTutors = [];
-    let roleCounter = 1;
-
-    function handleRoleChange(selectElement, index) {
-      const roleType = selectElement.value;
-      
-      // Remove existing tutor selection for this role
-      const existingTutorSelection = selectElement.parentNode.querySelector('.tutor-selection');
-      if (existingTutorSelection) {
-        selectElement.parentNode.removeChild(existingTutorSelection);
-      }
-      
-      // Clear previous selection for this index
-      selectedHouseTutors[index - 1] = '';
-      
-      // If House Tutor is selected, show tutor selection
-      if (roleType === 'house-tutor') {
-        showTutorSelection(selectElement, index);
-      }
-    }
-
-    function showTutorSelection(selectElement, index) {
-      const roleWrapper = selectElement.parentNode;
-      
-      // Get available tutors (excluding already selected ones)
-      const availableTutors = allHouseTutors.filter(tutor => 
-        !selectedHouseTutors.includes(tutor.value)
-      );
-      
-      if (availableTutors.length === 0) {
-        alert('No more House Tutors available. All 6 have been selected.');
-        selectElement.value = '';
-        return;
-      }
-      
-      const tutorSelection = document.createElement('div');
-      tutorSelection.className = 'tutor-selection';
-      tutorSelection.innerHTML = `
-        <label style="font-weight: 600; color: var(--accent-2); margin-bottom: 8px; display: block;">
-          Select House Tutor:
-        </label>
-        <select class="tutor-select" onchange="updateHouseTutorSelection(this, ${index})" required>
-          <option value="">-- Choose House Tutor --</option>
-          ${availableTutors.map(tutor => 
-            `<option value="${tutor.value}">${tutor.text}</option>`
-          ).join('')}
-        </select>
-      `;
-      
-      roleWrapper.appendChild(tutorSelection);
-    }
-
-    function updateHouseTutorSelection(selectElement, index) {
-      selectedHouseTutors[index - 1] = selectElement.value;
-      
-      // Update all role selects to remove selected tutors from House Tutor options
-      updateAllRoleSelects();
-    }
-
-    function updateAllRoleSelects() {
-      const roleSelects = document.querySelectorAll('.role-select');
-      
-      roleSelects.forEach((select, index) => {
-        const currentValue = select.value;
-        const currentIndex = index + 1;
-        
-        // Clear and rebuild options
-        select.innerHTML = `
-          <option value="">-- Select Role ${currentIndex} --</option>
-          <option value="house-tutor" ${currentValue === 'house-tutor' ? 'selected' : ''}>House Tutor</option>
-          <option value="assistant-provost" ${currentValue === 'assistant-provost' ? 'selected' : ''}>Assistant Provost</option>
-          <option value="provost" ${currentValue === 'provost' ? 'selected' : ''}>Provost</option>
-          <option value="treasurer" ${currentValue === 'treasurer' ? 'selected' : ''}>Treasurer</option>
-          <option value="vc" ${currentValue === 'vc' ? 'selected' : ''}>Vice Chancellor</option>
-        `;
-        
-        // If this role was House Tutor and all tutors are taken, change it
-        if (currentValue === 'house-tutor') {
-          const availableTutors = allHouseTutors.filter(tutor => 
-            !selectedHouseTutors.includes(tutor.value) || selectedHouseTutors[currentIndex - 1] === tutor.value
-          );
-          
-          if (availableTutors.length === 0) {
-            select.value = '';
-            const tutorSelection = select.parentNode.querySelector('.tutor-selection');
-            if (tutorSelection) {
-              select.parentNode.removeChild(tutorSelection);
-            }
-            selectedHouseTutors[currentIndex - 1] = '';
-            alert(`Role ${currentIndex}: No House Tutors available. Please select a different role.`);
-          }
-        }
-        
-        // Reattach the change event
-        select.setAttribute('onchange', `handleRoleChange(this, ${currentIndex})`);
-      });
-    }
-
-    function addNextRole() {
-      roleCounter++;
-      const container = document.getElementById('rolesContainer');
-      
-      const roleWrapper = document.createElement('div');
-      roleWrapper.className = 'role-wrapper';
-      
-      roleWrapper.innerHTML = `
-        <select name="role[]" class="role-select" onchange="handleRoleChange(this, ${roleCounter})" required>
-          <option value="">-- Select Role ${roleCounter} --</option>
-          <option value="house-tutor">House Tutor</option>
-          <option value="assistant-provost">Assistant Provost</option>
-          <option value="provost">Provost</option>
-          <option value="treasurer">Treasurer</option>
-          <option value="vc">Vice Chancellor</option>
-        </select>
-        <button type="button" class="remove-btn" onclick="removeRole(this, ${roleCounter})">
-          Remove
-        </button>
-      `;
-      
-      container.appendChild(roleWrapper);
-      selectedHouseTutors[roleCounter - 1] = '';
-    }
-
-    function removeRole(button, index) {
-      const wrapper = button.closest('.role-wrapper');
-      const container = document.getElementById('rolesContainer');
-      container.removeChild(wrapper);
-      
-      // Remove from selected tutors array
-      selectedHouseTutors.splice(index - 1, 1);
-      roleCounter--;
-      
-      // Reindex remaining roles
-      const remainingWrappers = container.querySelectorAll('.role-wrapper');
-      remainingWrappers.forEach((wrapper, idx) => {
-        const newIndex = idx + 1;
-        const select = wrapper.querySelector('.role-select');
-        const tutorSelection = wrapper.querySelector('.tutor-selection');
-        
-        // Update select label
-        select.innerHTML = select.innerHTML.replace(/Role \d+/, `Role ${newIndex}`);
-        
-        // Update change event
-        select.setAttribute('onchange', `handleRoleChange(this, ${newIndex})`);
-        
-        // Update remove button
-        const removeBtn = wrapper.querySelector('.remove-btn');
-        if (removeBtn) {
-          removeBtn.setAttribute('onclick', `removeRole(this, ${newIndex})`);
-        }
-        
-        // Update tutor selection if exists
-        if (tutorSelection) {
-          const tutorSelect = tutorSelection.querySelector('.tutor-select');
-          tutorSelect.setAttribute('onchange', `updateHouseTutorSelection(this, ${newIndex})`);
-        }
-      });
-      
-      // Update all role selects
-      updateAllRoleSelects();
-    }
-
-    // Form submission
-    document.getElementById('applicationForm').addEventListener('submit', function(e) {
-      e.preventDefault();
-      
-      // Validate all role selections
-      const roleSelects = document.querySelectorAll('.role-select');
-      let isValid = true;
-      
-      roleSelects.forEach((select, index) => {
-        if (!select.value) {
-          alert(`Please select a role for Role ${index + 1}.`);
-          isValid = false;
-          return;
-        }
-        
-        if (select.value === 'house-tutor') {
-          const tutorSelect = select.parentNode.querySelector('.tutor-select');
-          if (!tutorSelect || !tutorSelect.value) {
-            alert(`Please select a House Tutor for Role ${index + 1}.`);
-            isValid = false;
-            return;
-          }
-        }
-      });
-      
-      if (!isValid) return;
-      
-      alert('Application submitted successfully! You will be redirected to the dashboard.');
-      window.location.href = 'e_dashboard.html';
-    });
-  </script>
-  <script>
-  // Store all available officers by role
-  let officersByRole = {
-    house_tutor: [],
-    assistant_provost: [],
-    provost: [],
-    treasurer: [],
-    vc: []
-  };
-  
+  // ==================== GLOBAL VARIABLES ====================
+  let officersByRole = {};
+  let selectedRoles = {};
+  let selectedOfficers = {};
   let stepCounter = 1;
-  let selectedRoles = []; // Track which roles are already selected
-  
-  // Load all officers from database
-  async function loadAllOfficers() {
-    try {
-      // Load House Tutors (with floor)
-      const { data: houseTutors } = await supabase
+  let stepCounterUpload = 1;
+  let selectedRolesUpload = {};
+  let selectedOfficersUpload = {};
+  let currentUser = null;
+  let selectedFile = null;
+
+  // ==================== AUTH & USER ====================
+  document.getElementById('logoutBtn').addEventListener('click', async () => {
+    await supabase.auth.signOut();
+    window.location.href = '../index.html';
+  });
+
+  async function loadUserInfo() {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('name')
+        .eq('id', user.id)
+        .single();
+      document.getElementById('userName').textContent = profile?.name || 'User';
+      currentUser = { user, profile };
+    }
+    return user;
+  }
+
+  async function loadOfficers() {
+    const roles = ['house_tutor', 'assistant_provost', 'provost', 'treasurer', 'vc'];
+    for (const role of roles) {
+      const { data } = await supabase
         .from('profiles')
         .select('id, name, floor')
-        .eq('role', 'house_tutor')
-        .order('floor');
-      
-      officersByRole.house_tutor = houseTutors || [];
-      
-      // Load Assistant Provosts
-      const { data: asstProvosts } = await supabase
-        .from('profiles')
-        .select('id, name')
-        .eq('role', 'assistant_provost');
-      
-      officersByRole.assistant_provost = asstProvosts || [];
-      
-      // Load Provosts
-      const { data: provosts } = await supabase
-        .from('profiles')
-        .select('id, name')
-        .eq('role', 'provost');
-      
-      officersByRole.provost = provosts || [];
-      
-      // Load Treasurers
-      const { data: treasurers } = await supabase
-        .from('profiles')
-        .select('id, name')
-        .eq('role', 'treasurer');
-      
-      officersByRole.treasurer = treasurers || [];
-      
-      // Load VCs
-      const { data: vcs } = await supabase
-        .from('profiles')
-        .select('id, name')
-        .eq('role', 'vc');
-      
-      officersByRole.vc = vcs || [];
-      
-      console.log('Officers loaded:', officersByRole);
-      
-    } catch (error) {
-      console.error('Error loading officers:', error);
+        .eq('role', role)
+        .eq('approval_status', 'approved');
+      if (data) officersByRole[role] = data;
     }
   }
-  
-  // Handle role selection change
-  window.handleRoleChange = function(stepNumber) {
-    const roleSelect = document.getElementById(`role_${stepNumber}`);
-    const officerSelect = document.getElementById(`officer_${stepNumber}`);
-    const selectedRole = roleSelect.value;
-    
-    // Clear and enable officer select
-    officerSelect.innerHTML = '<option value="">-- Select Officer --</option>';
-    officerSelect.disabled = !selectedRole;
-    
-    if (!selectedRole) return;
-    
-    // Check if this role was already selected in another step
-    if (selectedRoles.includes(selectedRole) && selectedRoles.indexOf(selectedRole) !== stepNumber - 1) {
-      alert(`You've already selected ${getRoleName(selectedRole)} in another step. Each role can only be used once.`);
-      roleSelect.value = '';
-      officerSelect.disabled = true;
-      return;
-    }
-    
-    // Update selectedRoles array
-    selectedRoles[stepNumber - 1] = selectedRole;
-    
-    // Populate officer dropdown
-    const officers = officersByRole[selectedRole] || [];
-    
-    if (officers.length === 0) {
-      officerSelect.innerHTML = '<option value="">-- No officers available --</option>';
-      return;
-    }
-    
-    officers.forEach(officer => {
-      const option = document.createElement('option');
-      option.value = officer.id;
+
+  // ==================== TAB SWITCHING ====================
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
       
-      if (selectedRole === 'house_tutor') {
-        option.textContent = `${officer.name} (Floor: ${officer.floor || 'Ground'})`;
-      } else {
-        option.textContent = officer.name;
-      }
+      const tabId = btn.getAttribute('data-tab');
+      document.querySelectorAll('.tab-pane').forEach(pane => pane.classList.remove('active'));
+      document.getElementById(tabId).classList.add('active');
+    });
+  });
+
+  // ==================== FORM BASED FUNCTIONS ====================
+  function numberToWords(num) {
+    if (num === 0) return 'শূন্য টাকা মাত্র';
+    return num.toLocaleString() + ' টাকা মাত্র';
+  }
+
+  function calculateTotals() {
+    let total = 0;
+    const rows = document.querySelectorAll('#itemsBody tr');
+    
+    rows.forEach((row, index) => {
+      const qty = parseFloat(row.querySelector('.item-qty')?.value) || 0;
+      const price = parseFloat(row.querySelector('.item-price')?.value) || 0;
+      const itemTotal = qty * price;
       
-      officerSelect.appendChild(option);
+      const totalInput = row.querySelector('.item-total');
+      if (totalInput) totalInput.value = itemTotal.toFixed(2);
+      
+      total += itemTotal;
+      row.cells[0].textContent = index + 1;
     });
     
-    updatePathSummary();
-  };
-  
-  // Add new approval step
-  window.addApprovalStep = function() {
-    stepCounter++;
-    const container = document.getElementById('approvalStepsContainer');
+    document.getElementById('grandTotal').textContent = total.toFixed(2);
+    document.getElementById('amountInWords').textContent = numberToWords(total);
+  }
+
+  window.addRow = function() {
+    const tbody = document.getElementById('itemsBody');
+    const rowCount = tbody.children.length + 1;
     
-    const stepHtml = `
-      <div class="approval-step-item" data-step="${stepCounter}">
-        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
-          <span style="background: var(--accent-2); color: white; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold;">${stepCounter}</span>
-          <h4 style="margin: 0; color: var(--accent-2);">Approver #${stepCounter}</h4>
-        </div>
-        <div style="display: flex; gap: 10px;">
-          <select class="role-select" id="role_${stepCounter}" onchange="handleRoleChange(${stepCounter})" required style="flex: 2; padding: 12px; border: 2px solid var(--accent-2); border-radius: 8px;">
-            <option value="">-- Select Role --</option>
-            <option value="house_tutor">House Tutor</option>
-            <option value="assistant_provost">Assistant Provost</option>
-            <option value="provost">Provost</option>
-            <option value="treasurer">Treasurer</option>
-            <option value="vc">Vice Chancellor</option>
-          </select>
-          
-          <select class="officer-select" id="officer_${stepCounter}" style="flex: 3; padding: 12px; border: 2px solid var(--accent-2); border-radius: 8px;" disabled required>
-            <option value="">-- First Select Role --</option>
-          </select>
-          
-          <button type="button" class="remove-btn" onclick="removeStep(${stepCounter})">
-            <i class="fas fa-trash"></i>
-          </button>
-        </div>
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${rowCount}</td>
+      <td><input type="text" class="item-desc" placeholder="পণ্যের নাম"></td>
+      <td><input type="number" class="item-qty" value="1" min="1"></td>
+      <td><input type="number" class="item-price" value="0" min="0"></td>
+      <td><input type="text" class="item-total" readonly style="background:#f8fafc;"></td>
+      <td><button type="button" class="remove-row-btn" onclick="removeRow(this)">✖</button></td>
+    `;
+    
+    tbody.appendChild(tr);
+    tr.querySelector('.item-qty').addEventListener('input', calculateTotals);
+    tr.querySelector('.item-price').addEventListener('input', calculateTotals);
+  };
+
+  window.removeRow = function(btn) {
+    const tbody = document.getElementById('itemsBody');
+    if (tbody.children.length > 1) {
+      btn.closest('tr').remove();
+      calculateTotals();
+    } else {
+      alert('কমপক্ষে একটি আইটেম থাকতে হবে');
+    }
+  };
+
+  document.addEventListener('input', (e) => {
+    if (e.target.classList.contains('item-qty') || e.target.classList.contains('item-price')) {
+      calculateTotals();
+    }
+  });
+
+  // ==================== APPROVAL FLOW FOR FORM TAB ====================
+  async function populateOfficers(stepNumber, selectedRole) {
+    const officerSelect = document.querySelector(`.officer-select[data-step="${stepNumber}"]`);
+    if (!officerSelect) return;
+    
+    officerSelect.innerHTML = '<option value="">লোড হচ্ছে...</option>';
+    officerSelect.disabled = true;
+    
+    if (!selectedRole) {
+      officerSelect.innerHTML = '<option value="">-- প্রথমে ভূমিকা নির্বাচন করুন --</option>';
+      return;
+    }
+    
+    const officers = officersByRole[selectedRole] || [];
+    if (officers.length === 0) {
+      officerSelect.innerHTML = '<option value="">-- কোন কর্মকর্তা নেই --</option>';
+    } else {
+      officerSelect.innerHTML = '<option value="">-- কর্মকর্তা নির্বাচন করুন --</option>';
+      officers.forEach(officer => {
+        const option = document.createElement('option');
+        option.value = officer.id;
+        option.textContent = selectedRole === 'house_tutor' 
+          ? `${officer.name} (${officer.floor || 'Ground'})`
+          : officer.name;
+        officerSelect.appendChild(option);
+      });
+      officerSelect.disabled = false;
+    }
+    validateFormSubmit();
+  }
+
+  function handleRoleChange(stepNumber) {
+    const roleSelect = document.querySelector(`.role-select[data-step="${stepNumber}"]`);
+    const selectedRole = roleSelect?.value;
+    
+    if (selectedRole) {
+      selectedRoles[stepNumber] = selectedRole;
+      populateOfficers(stepNumber, selectedRole);
+    } else {
+      delete selectedRoles[stepNumber];
+      populateOfficers(stepNumber, null);
+    }
+    const officerSelect = document.querySelector(`.officer-select[data-step="${stepNumber}"]`);
+    if (officerSelect) {
+      officerSelect.onchange = () => {
+        selectedOfficers[stepNumber] = officerSelect.value;
+        validateFormSubmit();
+      };
+    }
+    validateFormSubmit();
+  }
+
+  function addApprovalStep() {
+    stepCounter++;
+    const container = document.getElementById('stepsContainer');
+    const stepDiv = createStepCard(stepCounter, 'role-select', 'officer-select', 'remove-step');
+    container.appendChild(stepDiv);
+    validateFormSubmit();
+  }
+
+  function removeStep(stepNumber) {
+    const stepElement = document.querySelector(`.step-card[data-step="${stepNumber}"]`);
+    if (stepElement) {
+      delete selectedRoles[stepNumber];
+      stepElement.remove();
+      renumberSteps('stepsContainer', 'role-select', 'officer-select', 'remove-step');
+    }
+    validateFormSubmit();
+  }
+
+  // ==================== APPROVAL FLOW FOR UPLOAD TAB ====================
+  async function populateOfficersUpload(stepNumber, selectedRole) {
+    const officerSelect = document.querySelector(`.officer-select-upload[data-step="${stepNumber}"]`);
+    if (!officerSelect) return;
+    
+    officerSelect.innerHTML = '<option value="">লোড হচ্ছে...</option>';
+    officerSelect.disabled = true;
+    
+    if (!selectedRole) {
+      officerSelect.innerHTML = '<option value="">-- প্রথমে ভূমিকা নির্বাচন করুন --</option>';
+      return;
+    }
+    
+    const officers = officersByRole[selectedRole] || [];
+    if (officers.length === 0) {
+      officerSelect.innerHTML = '<option value="">-- কোন কর্মকর্তা নেই --</option>';
+    } else {
+      officerSelect.innerHTML = '<option value="">-- কর্মকর্তা নির্বাচন করুন --</option>';
+      officers.forEach(officer => {
+        const option = document.createElement('option');
+        option.value = officer.id;
+        option.textContent = selectedRole === 'house_tutor' 
+          ? `${officer.name} (${officer.floor || 'Ground'})`
+          : officer.name;
+        officerSelect.appendChild(option);
+      });
+      officerSelect.disabled = false;
+    }
+    validateUploadSubmit();
+  }
+
+  function handleRoleChangeUpload(stepNumber) {
+    const roleSelect = document.querySelector(`.role-select-upload[data-step="${stepNumber}"]`);
+    const selectedRole = roleSelect?.value;
+    
+    if (selectedRole) {
+      selectedRolesUpload[stepNumber] = selectedRole;
+      populateOfficersUpload(stepNumber, selectedRole);
+    } else {
+      delete selectedRolesUpload[stepNumber];
+      populateOfficersUpload(stepNumber, null);
+    }
+    const officerSelect = document.querySelector(`.officer-select-upload[data-step="${stepNumber}"]`);
+    if (officerSelect) {
+      officerSelect.onchange = () => {
+        selectedOfficersUpload[stepNumber] = officerSelect.value;
+        validateUploadSubmit();
+      };
+    }
+    validateUploadSubmit();
+  }
+
+  function addApprovalStepUpload() {
+    stepCounterUpload++;
+    const container = document.getElementById('stepsContainer2');
+    const stepDiv = createStepCard(stepCounterUpload, 'role-select-upload', 'officer-select-upload', 'remove-step-upload');
+    container.appendChild(stepDiv);
+    validateUploadSubmit();
+  }
+
+  function removeStepUpload(stepNumber) {
+    const stepElement = document.querySelector(`.step-card[data-step="${stepNumber}"]`);
+    if (stepElement) {
+      delete selectedRolesUpload[stepNumber];
+      stepElement.remove();
+      renumberSteps('stepsContainer2', 'role-select-upload', 'officer-select-upload', 'remove-step-upload');
+    }
+    validateUploadSubmit();
+  }
+
+  // Helper function to create step card
+  function createStepCard(stepNumber, roleClass, officerClass, removeClass) {
+    const stepDiv = document.createElement('div');
+    stepDiv.className = 'step-card';
+    stepDiv.setAttribute('data-step', stepNumber);
+    
+    stepDiv.innerHTML = `
+      <div class="step-header">
+        <strong>Step ${stepNumber}: অনুমোদনকারী</strong>
+      </div>
+      <div class="step-controls">
+        <select class="${roleClass}" data-step="${stepNumber}">
+          <option value="">-- ভূমিকা নির্বাচন করুন --</option>
+          <option value="house_tutor">হাউস টিউটর</option>
+          <option value="assistant_provost">সহকারী প্রক্টর</option>
+          <option value="provost">প্রক্টর</option>
+          <option value="treasurer">কোষাধ্যক্ষ</option>
+          <option value="vc">উপাচার্য</option>
+        </select>
+        <select class="${officerClass}" data-step="${stepNumber}" disabled>
+          <option value="">-- প্রথমে ভূমিকা নির্বাচন করুন --</option>
+        </select>
+        <button type="button" class="${removeClass}" data-step="${stepNumber}">Remove</button>
       </div>
     `;
     
-    container.insertAdjacentHTML('beforeend', stepHtml);
-    updatePathSummary();
-  };
-  
-  // Remove approval step
-  window.removeStep = function(stepNumber) {
-    const stepElement = document.querySelector(`.approval-step-item[data-step="${stepNumber}"]`);
-    if (stepElement) {
-      // Remove from selectedRoles array
-      selectedRoles[stepNumber - 1] = null;
-      stepElement.remove();
-      
-      // Renumber remaining steps
-      const remainingSteps = document.querySelectorAll('.approval-step-item');
-      remainingSteps.forEach((step, index) => {
-        const newStepNum = index + 1;
-        step.setAttribute('data-step', newStepNum);
-        
-        // Update step number display
-        step.querySelector('span').textContent = newStepNum;
-        step.querySelector('h4').textContent = `Approver #${newStepNum}`;
-        
-        // Update IDs
-        const roleSelect = step.querySelector('.role-select');
-        roleSelect.id = `role_${newStepNum}`;
-        roleSelect.setAttribute('onchange', `handleRoleChange(${newStepNum})`);
-        
-        const officerSelect = step.querySelector('.officer-select');
-        officerSelect.id = `officer_${newStepNum}`;
-        
-        const removeBtn = step.querySelector('.remove-btn');
-        removeBtn.setAttribute('onclick', `removeStep(${newStepNum})`);
-      });
-      
-      stepCounter = remainingSteps.length;
-      updatePathSummary();
+    const roleSelect = stepDiv.querySelector(`.${roleClass}`);
+    const removeBtn = stepDiv.querySelector(`.${removeClass}`);
+    
+    if (roleClass === 'role-select') {
+      roleSelect.addEventListener('change', () => handleRoleChange(stepNumber));
+      removeBtn.addEventListener('click', () => removeStep(stepNumber));
+    } else {
+      roleSelect.addEventListener('change', () => handleRoleChangeUpload(stepNumber));
+      removeBtn.addEventListener('click', () => removeStepUpload(stepNumber));
     }
-  };
-  
-  // Helper: Get role name in Bengali/English
-  function getRoleName(role) {
-    const names = {
-      'house_tutor': 'House Tutor',
-      'assistant_provost': 'Assistant Provost',
-      'provost': 'Provost',
-      'treasurer': 'Treasurer',
-      'vc': 'Vice Chancellor'
-    };
-    return names[role] || role;
+    
+    return stepDiv;
   }
-  
-  // Update the summary path
-  function updatePathSummary() {
-    const steps = document.querySelectorAll('.approval-step-item');
-    let pathHtml = '';
+
+  function renumberSteps(containerId, roleClass, officerClass, removeClass) {
+    const container = document.getElementById(containerId);
+    const steps = container.querySelectorAll('.step-card');
     
     steps.forEach((step, index) => {
-      const stepNum = index + 1;
-      const roleSelect = document.getElementById(`role_${stepNum}`);
-      const officerSelect = document.getElementById(`officer_${stepNum}`);
+      const newStepNum = index + 1;
+      step.setAttribute('data-step', newStepNum);
+      step.querySelector('.step-header strong').textContent = `Step ${newStepNum}: অনুমোদনকারী`;
       
-      if (roleSelect && roleSelect.value) {
-        const roleName = getRoleName(roleSelect.value);
-        const officerName = officerSelect?.selectedOptions[0]?.text || 'Not selected';
-        
-        pathHtml += `<span style="background: var(--accent-2); color: white; padding: 5px 10px; border-radius: 20px; margin: 0 5px;">${roleName}</span>`;
-        
-        if (index < steps.length - 1) {
-          pathHtml += ` <span style="font-size: 20px; color: var(--accent-2);">→</span> `;
-        }
-      }
+      const roleSelect = step.querySelector(`.${roleClass}`);
+      roleSelect.setAttribute('data-step', newStepNum);
+      
+      const officerSelect = step.querySelector(`.${officerClass}`);
+      officerSelect.setAttribute('data-step', newStepNum);
+      
+      const removeBtn = step.querySelector(`.${removeClass}`);
+      removeBtn.setAttribute('data-step', newStepNum);
     });
     
-    if (!pathHtml) {
-      pathHtml = '<span style="color: #999;">No approvers selected yet</span>';
+    if (containerId === 'stepsContainer') stepCounter = steps.length;
+    else stepCounterUpload = steps.length;
+  }
+
+  // ==================== VALIDATION FUNCTIONS ====================
+  function validateFormSubmit() {
+    const steps = document.querySelectorAll('#stepsContainer .step-card');
+    let allValid = steps.length > 0;
+    
+    for (let i = 0; i < steps.length; i++) {
+      const stepNum = i + 1;
+      const roleSelect = document.querySelector(`.role-select[data-step="${stepNum}"]`);
+      const officerSelect = document.querySelector(`.officer-select[data-step="${stepNum}"]`);
+      
+      if (!roleSelect?.value || !officerSelect?.value) {
+        allValid = false;
+        break;
+      }
     }
     
-    document.getElementById('selectedPath').innerHTML = pathHtml;
+    document.getElementById('formSubmitBtn').disabled = !allValid;
   }
-  
-  // Form submission
-  document.getElementById('applicationForm').addEventListener('submit', async (e) => {
+
+  function validateUploadSubmit() {
+    const steps = document.querySelectorAll('#stepsContainer2 .step-card');
+    let allValid = steps.length > 0;
+    
+    for (let i = 0; i < steps.length; i++) {
+      const stepNum = i + 1;
+      const roleSelect = document.querySelector(`.role-select-upload[data-step="${stepNum}"]`);
+      const officerSelect = document.querySelector(`.officer-select-upload[data-step="${stepNum}"]`);
+      
+      if (!roleSelect?.value || !officerSelect?.value) {
+        allValid = false;
+        break;
+      }
+    }
+    
+    const title = document.getElementById('fileTitle')?.value;
+    const description = document.getElementById('fileDescription')?.value;
+    const hasFile = selectedFile !== null;
+    
+    document.getElementById('uploadSubmitBtn').disabled = !allValid || !title || !description || !hasFile;
+  }
+
+  // ==================== FILE UPLOAD HANDLERS ====================
+  document.getElementById('fileInput').addEventListener('change', (e) => {
+    if (e.target.files && e.target.files[0]) {
+      selectedFile = e.target.files[0];
+      document.getElementById('fileName').textContent = selectedFile.name;
+      document.getElementById('fileInfo').style.display = 'block';
+      document.querySelector('.file-upload-area').style.display = 'none';
+      validateUploadSubmit();
+    }
+  });
+
+  window.clearFile = function() {
+    selectedFile = null;
+    document.getElementById('fileInput').value = '';
+    document.getElementById('fileInfo').style.display = 'none';
+    document.querySelector('.file-upload-area').style.display = 'block';
+    validateUploadSubmit();
+  };
+
+  document.getElementById('fileTitle').addEventListener('input', validateUploadSubmit);
+  document.getElementById('fileDescription').addEventListener('input', validateUploadSubmit);
+
+  // ==================== FORM SUBMISSION ====================
+  document.getElementById('requisitionForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     
-    // Collect all steps
-    const steps = document.querySelectorAll('.approval-step-item');
+    const submitBtn = document.getElementById('formSubmitBtn');
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-pulse"></i> প্রেরণ করা হচ্ছে...';
     
-    if (steps.length === 0) {
-      alert('Please add at least one approver');
-      return;
-    }
+    const date = document.getElementById('date').value;
+    const items = [];
+    const rows = document.querySelectorAll('#itemsBody tr');
     
-    const approvals = [];
-    let isValid = true;
-    
-    steps.forEach((step, index) => {
-      const stepNum = index + 1;
-      const roleSelect = document.getElementById(`role_${stepNum}`);
-      const officerSelect = document.getElementById(`officer_${stepNum}`);
-      
-      if (!roleSelect.value || !officerSelect.value) {
-        alert(`Please select both role and officer for step ${stepNum}`);
-        isValid = false;
-        return;
-      }
-      
-      approvals.push({
-        role: roleSelect.value,
-        officer_id: officerSelect.value,
-        step_order: stepNum
+    rows.forEach((row, index) => {
+      items.push({
+        serial: index + 1,
+        description: row.querySelector('.item-desc')?.value || '',
+        quantity: parseFloat(row.querySelector('.item-qty')?.value) || 0,
+        price: parseFloat(row.querySelector('.item-price')?.value) || 0,
+        total: (parseFloat(row.querySelector('.item-qty')?.value) || 0) * 
+               (parseFloat(row.querySelector('.item-price')?.value) || 0)
       });
     });
     
-    if (!isValid) return;
+    const totalAmount = parseFloat(document.getElementById('grandTotal').textContent) || 0;
     
-    console.log('Approval flow:', approvals);
+    const steps = document.querySelectorAll('#stepsContainer .step-card');
+    const approvals = [];
     
-    // এখানে আপনার existing submission code চালাবে
-    // যেখানে approvals array অনুযায়ী application_approvals table এ insert করবে
+    for (let i = 0; i < steps.length; i++) {
+      const stepNum = i + 1;
+      const roleSelect = document.querySelector(`.role-select[data-step="${stepNum}"]`);
+      const officerSelect = document.querySelector(`.officer-select[data-step="${stepNum}"]`);
+      
+      const roleValue = roleSelect?.value;
+      const officerValue = officerSelect?.value;
+      if (!roleValue || !officerValue) {
+        alert(`Step ${stepNum} এর role এবং officer নির্বাচন করুন`);
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> ফর্ম জমা দিন';
+        return;
+      }
+
+      approvals.push({
+        role: roleValue,
+        officer_id: officerValue,
+        step_order: stepNum
+      });
+    }
     
-    alert('File submitted with custom approval flow!');
+    const formData = {
+      type: 'form',
+      date: date,
+      department: 'বরাল হল/২০২৫',
+      items: items,
+      total_amount: totalAmount,
+      amount_in_words: document.getElementById('amountInWords').textContent,
+      approvals: approvals,
+      submitted_by: currentUser?.user?.id,
+      submitted_at: new Date().toISOString()
+    };
+    
+    try {
+      const roleAssignments = {
+        house_tutor_id: null,
+        assistant_provost_id: null,
+        provost_id: null,
+        treasurer_id: null,
+        vc_id: null
+      };
+
+      approvals.forEach((approval) => {
+        const columnName = `${approval.role}_id`;
+        if (Object.prototype.hasOwnProperty.call(roleAssignments, columnName) && !roleAssignments[columnName]) {
+          roleAssignments[columnName] = approval.officer_id;
+        }
+      });
+
+      const { data: fileData, error: fileError } = await supabase
+        .from('files')
+        .insert({
+          title: `চাহিদাপত্র - ${date}`,
+          description: JSON.stringify(formData),
+          file_url: null,
+          current_step: approvals[0]?.role || 'pending',
+          status: 'pending',
+          supervisor_id: currentUser?.user?.id,
+          ...roleAssignments,
+          created_at: new Date().toISOString()
+        })
+        .select()
+        .single();
+      
+      if (fileError) throw fileError;
+      
+      for (const approval of approvals) {
+        await supabase
+          .from('application_approvals')
+          .insert({
+            application_id: fileData.id,
+            role: approval.role,
+            role_order: approval.step_order,
+            approved_by: approval.officer_id,
+            status: approval.step_order === 1 ? 'pending' : 'waiting',
+            created_at: new Date().toISOString()
+          });
+      }
+      
+      alert('✅ চাহিদাপত্র সফলভাবে জমা দেওয়া হয়েছে!');
+      window.location.href = 'my_applications.html';
+      
+    } catch (error) {
+      console.error('Error:', error);
+      alert('জমা দিতে ব্যর্থ হয়েছে: ' + error.message);
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> ফর্ম জমা দিন';
+    }
   });
-  
-  // Initialize on page load
+
+  // ==================== UPLOAD SUBMISSION ====================
+  document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const submitBtn = document.getElementById('uploadSubmitBtn');
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-pulse"></i> আপলোড করা হচ্ছে...';
+    
+    const title = document.getElementById('fileTitle').value;
+    const description = document.getElementById('fileDescription').value;
+    
+    const steps = document.querySelectorAll('#stepsContainer2 .step-card');
+    const approvals = [];
+    
+    for (let i = 0; i < steps.length; i++) {
+      const stepNum = i + 1;
+      const roleSelect = document.querySelector(`.role-select-upload[data-step="${stepNum}"]`);
+      const officerSelect = document.querySelector(`.officer-select-upload[data-step="${stepNum}"]`);
+      
+      const roleValue = roleSelect?.value;
+      const officerValue = officerSelect?.value;
+      if (!roleValue || !officerValue) {
+        alert(`Upload Step ${stepNum} এর role এবং officer নির্বাচন করুন`);
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<i class="fas fa-upload"></i> ফাইল জমা দিন';
+        return;
+      }
+
+      approvals.push({
+        role: roleValue,
+        officer_id: officerValue,
+        step_order: stepNum
+      });
+    }
+    
+    try {
+      let fileUrl = null;
+      
+      if (selectedFile) {
+        const fileExt = selectedFile.name.split('.').pop();
+        const fileName = `files/${currentUser?.user?.id}/${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
+        
+        const { error: uploadError } = await supabase.storage
+          .from('applications')
+          .upload(fileName, selectedFile);
+        
+        if (uploadError) throw uploadError;
+        
+        const { data: urlData } = supabase.storage
+          .from('applications')
+          .getPublicUrl(fileName);
+        
+        fileUrl = urlData.publicUrl;
+      }
+      
+      const formData = {
+        type: 'file',
+        title: title,
+        description: description,
+        file_url: fileUrl,
+        approvals: approvals,
+        submitted_by: currentUser?.user?.id,
+        submitted_at: new Date().toISOString()
+      };
+
+      const roleAssignments = {
+        house_tutor_id: null,
+        assistant_provost_id: null,
+        provost_id: null,
+        treasurer_id: null,
+        vc_id: null
+      };
+
+      approvals.forEach((approval) => {
+        const columnName = `${approval.role}_id`;
+        if (Object.prototype.hasOwnProperty.call(roleAssignments, columnName) && !roleAssignments[columnName]) {
+          roleAssignments[columnName] = approval.officer_id;
+        }
+      });
+      
+      const { data: fileData, error: fileError } = await supabase
+        .from('files')
+        .insert({
+          title: title,
+          description: JSON.stringify(formData),
+          file_url: fileUrl,
+          current_step: approvals[0]?.role || 'pending',
+          status: 'pending',
+          supervisor_id: currentUser?.user?.id,
+          ...roleAssignments,
+          created_at: new Date().toISOString()
+        })
+        .select()
+        .single();
+      
+      if (fileError) throw fileError;
+      
+      for (const approval of approvals) {
+        await supabase
+          .from('application_approvals')
+          .insert({
+            application_id: fileData.id,
+            role: approval.role,
+            role_order: approval.step_order,
+            approved_by: approval.officer_id,
+            status: approval.step_order === 1 ? 'pending' : 'waiting',
+            created_at: new Date().toISOString()
+          });
+      }
+      
+      alert('✅ ফাইল সফলভাবে জমা দেওয়া হয়েছে!');
+      window.location.href = 'my_applications.html';
+      
+    } catch (error) {
+      console.error('Error:', error);
+      alert('জমা দিতে ব্যর্থ হয়েছে: ' + error.message);
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = '<i class="fas fa-upload"></i> ফাইল জমা দিন';
+    }
+  });
+
+  // ==================== INITIALIZATION ====================
   document.addEventListener('DOMContentLoaded', async () => {
-    await loadAllOfficers();
+    await loadUserInfo();
+    await loadOfficers();
+    
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('date').value = today;
+    
+    document.getElementById('addStepBtn').addEventListener('click', addApprovalStep);
+    document.getElementById('addStepBtn2').addEventListener('click', addApprovalStepUpload);
+    
+    const firstRoleSelect = document.querySelector('.role-select[data-step="1"]');
+    if (firstRoleSelect) firstRoleSelect.addEventListener('change', () => handleRoleChange(1));
+    
+    const firstRoleSelectUpload = document.querySelector('.role-select-upload[data-step="1"]');
+    if (firstRoleSelectUpload) firstRoleSelectUpload.addEventListener('change', () => handleRoleChangeUpload(1));
+    
+    calculateTotals();
+    validateFormSubmit();
+    validateUploadSubmit();
   });
 </script>
 </body>

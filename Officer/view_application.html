@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Review Application | Officer Panel</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="../css/responsive-global.css">
+  <style>
+    :root {
+      --primary: #3498db;
+      --success: #2ecc71;
+      --danger: #e74c3c;
+      --warning: #f39c12;
+      --dark: #2c3e50;
+      --muted: #6b7280;
+      --bg: #f5f7fb;
+      --card: #ffffff;
+      --border: #e5e7eb;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Poppins', sans-serif; }
+    body { background: var(--bg); color: #0f172a; }
+    .container { max-width: 980px; margin: 24px auto; padding: 0 16px 32px; }
+    .topbar { display: flex; justify-content: space-between; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
+    .btn {
+      border: none; border-radius: 10px; padding: 10px 14px; cursor: pointer; font-weight: 600;
+      display: inline-flex; align-items: center; gap: 8px; text-decoration: none;
+    }
+    .btn-back { background: var(--dark); color: #fff; }
+    .btn-download { background: var(--primary); color: #fff; }
+    .card {
+      background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 18px;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.05); margin-bottom: 14px;
+    }
+    .title { font-size: 1.5rem; font-weight: 700; color: var(--dark); margin-bottom: 8px; }
+    .meta { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 8px; }
+    .meta .item { background: #f8fafc; border: 1px solid var(--border); border-radius: 10px; padding: 10px; }
+    .label { font-size: 12px; color: var(--muted); margin-bottom: 4px; font-weight: 500; }
+    .value { font-size: 14px; font-weight: 600; color: #111827; word-break: break-word; }
+    .description {
+      white-space: pre-wrap; background: #f8fafc; border: 1px solid var(--border); border-radius: 10px;
+      padding: 12px; margin-top: 10px; color: #1f2937;
+    }
+    .status-badge {
+      display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 999px; font-size: 12px; font-weight: 700;
+      background: #fff7ed; color: #9a3412;
+    }
+    /* টাইমলাইন স্টাইল */
+    .timeline-container {
+      margin-top: 10px;
+    }
+    .timeline-step {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 14px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      margin-bottom: 12px;
+      background: #fff;
+      transition: all 0.2s ease;
+    }
+    .timeline-step.completed {
+      background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+      border-color: #86efac;
+    }
+    .timeline-step.current {
+      background: linear-gradient(135deg, #eff6ff, #dbeafe);
+      border-color: #93c5fd;
+      box-shadow: 0 2px 8px rgba(59,130,246,0.15);
+    }
+    .timeline-step.pending {
+      background: #fff;
+      border-color: var(--border);
+    }
+    .timeline-step.rejected {
+      background: #fef2f2;
+      border-color: #fecaca;
+    }
+    .timeline-step-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+      flex-shrink: 0;
+    }
+    .timeline-step-icon.completed {
+      background: #22c55e;
+      color: white;
+    }
+    .timeline-step-icon.current {
+      background: #3b82f6;
+      color: white;
+      animation: pulse 1.5s infinite;
+    }
+    .timeline-step-icon.pending {
+      background: #e5e7eb;
+      color: #9ca3af;
+    }
+    .timeline-step-icon.rejected {
+      background: #ef4444;
+      color: white;
+    }
+    @keyframes pulse {
+      0% { box-shadow: 0 0 0 0 rgba(59,130,246,0.4); }
+      70% { box-shadow: 0 0 0 8px rgba(59,130,246,0); }
+      100% { box-shadow: 0 0 0 0 rgba(59,130,246,0); }
+    }
+    .timeline-step-content {
+      flex: 1;
+    }
+    .timeline-step-role {
+      font-weight: 700;
+      font-size: 1rem;
+      color: #0f172a;
+      text-transform: capitalize;
+    }
+    .timeline-step-name {
+      font-size: 13px;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+    .timeline-step-date {
+      font-size: 11px;
+      color: #9ca3af;
+      margin-top: 4px;
+    }
+    .timeline-step-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 12px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 600;
+      flex-shrink: 0;
+    }
+    .timeline-step-status.completed {
+      background: #dcfce7;
+      color: #166534;
+    }
+    .timeline-step-status.current {
+      background: #dbeafe;
+      color: #1e40af;
+    }
+    .timeline-step-status.pending {
+      background: #f3f4f6;
+      color: #6b7280;
+    }
+    .timeline-step-status.rejected {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+    .actions { display: grid; gap: 10px; }
+    textarea {
+      width: 100%; min-height: 100px; border: 1px solid var(--border); border-radius: 10px; padding: 10px; resize: vertical;
+      font-family: inherit;
+    }
+    .btn-row { display: flex; gap: 10px; flex-wrap: wrap; }
+    .btn-approve { background: var(--success); color: #fff; }
+    .btn-reject { background: var(--danger); color: #fff; }
+    .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+    .notice { padding: 10px 12px; border-radius: 10px; background: #eff6ff; color: #1e40af; border: 1px solid #bfdbfe; margin-bottom: 10px; }
+    .error { padding: 10px 12px; border-radius: 10px; background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; margin-bottom: 10px; }
+    .warning { padding: 10px 12px; border-radius: 10px; background: #fffbeb; color: #92400e; border: 1px solid #fde68a; margin-bottom: 10px; }
+    .file-preview-box {
+      margin-top: 10px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: #f8fafc;
+      min-height: 420px;
+      overflow: hidden;
+    }
+    .file-preview-box iframe {
+      width: 100%;
+      height: 420px;
+      border: 0;
+      background: #fff;
+    }
+    .file-preview-empty {
+      padding: 20px;
+      color: var(--muted);
+      font-size: 14px;
+      text-align: center;
+    }
+    @media (max-width: 700px) { 
+      .meta { grid-template-columns: 1fr; }
+      .timeline-step { flex-direction: column; text-align: center; }
+      .timeline-step-icon { margin-bottom: 8px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="topbar">
+      <button class="btn btn-back" id="backBtn"><i class="fas fa-arrow-left"></i> Back to Dashboard</button>
+      <button class="btn btn-download" id="downloadBtn" style="display:none;"><i class="fas fa-download"></i> Open File</button>
+    </div>
+
+    <div id="message"></div>
+
+    <div class="card">
+      <div class="title" id="fileTitle">Loading...</div>
+      <span class="status-badge" id="fileStatus"><i class="fas fa-clock"></i> Pending</span>
+      <div class="meta">
+        <div class="item">
+          <div class="label">Submitted By</div>
+          <div class="value" id="submittedBy">-</div>
+        </div>
+        <div class="item">
+          <div class="label">Submitted At</div>
+          <div class="value" id="submittedAt">-</div>
+        </div>
+        <div class="item">
+          <div class="label">Current Step</div>
+          <div class="value" id="currentStep">-</div>
+        </div>
+      </div>
+      <div class="label" style="margin-top:10px;">Details</div>
+      <div class="description" id="fileDescription">-</div>
+    </div>
+
+    <div class="card">
+      <div class="label">Approval Flow <span style="font-size: 11px; color: #6b7280;">(Complete approval history)</span></div>
+      <div id="timeline" class="timeline-container"></div>
+    </div>
+
+    <div class="card">
+      <div class="label">Attached File</div>
+      <div id="filePreview" class="file-preview-box">
+        <div class="file-preview-empty">📄 No file attached.</div>
+      </div>
+    </div>
+
+    <div class="card actions">
+      <div class="label">Officer Comment (optional for approve, required for reject)</div>
+      <textarea id="comments" placeholder="Write your decision comments..."></textarea>
+      <div class="btn-row">
+        <button class="btn btn-approve" id="approveBtn"><i class="fas fa-check"></i> Approve</button>
+        <button class="btn btn-reject" id="rejectBtn"><i class="fas fa-times"></i> Reject</button>
+      </div>
+    </div>
+  </div>
+
+ <script type="module">
+    import { supabase } from '../js/supabase.js';
+    import { approveFile, rejectFile } from '../js/officer_actions.js';
+    import { deriveFileState, formatRoleName, getTimelineStepPresentation, normalizeRole } from '../js/file_status_helper.js';
+
+    const params = new URLSearchParams(window.location.search);
+    const fileId = params.get('id');
+    let currentUserProfile = null;
+    let currentFile = null;
+
+    const officerDashboards = {
+      house_tutor: 'house_tutor_dashboard.html',
+      assistant_provost: 'assistant_provost_dashboard.html',
+      provost: 'provost_dashboard.html',
+      treasurer: 'treasurer_dashboard.html',
+      vc: 'vc_dashboard.html'
+    };
+
+    function showMessage(text, type = 'notice') {
+      const el = document.getElementById('message');
+      const className = type === 'error' ? 'error' : (type === 'warning' ? 'warning' : 'notice');
+      el.innerHTML = `<div class="${className}">${text}</div>`;
+      setTimeout(() => {
+        if (el.innerHTML === `<div class="${className}">${text}</div>`) el.innerHTML = '';
+      }, 5000);
+    }
+
+    function setBusy(isBusy) {
+      const approveBtn = document.getElementById('approveBtn');
+      const rejectBtn = document.getElementById('rejectBtn');
+      if (approveBtn) approveBtn.disabled = isBusy;
+      if (rejectBtn) rejectBtn.disabled = isBusy;
+      if (isBusy) {
+        if (approveBtn) approveBtn.innerHTML = '<i class="fas fa-spinner fa-pulse"></i> Processing...';
+        if (rejectBtn) rejectBtn.innerHTML = '<i class="fas fa-spinner fa-pulse"></i> Processing...';
+      } else {
+        if (approveBtn) approveBtn.innerHTML = '<i class="fas fa-check"></i> Approve';
+        if (rejectBtn) rejectBtn.innerHTML = '<i class="fas fa-times"></i> Reject';
+      }
+    }
+
+    function setActionAvailability(canAct) {
+      const approveBtn = document.getElementById('approveBtn');
+      const rejectBtn = document.getElementById('rejectBtn');
+      if (approveBtn) {
+        approveBtn.disabled = !canAct;
+        approveBtn.innerHTML = '<i class="fas fa-check"></i> Approve';
+      }
+      if (rejectBtn) {
+        rejectBtn.disabled = !canAct;
+        rejectBtn.innerHTML = '<i class="fas fa-times"></i> Reject';
+      }
+    }
+
+    function goDashboard() {
+      const role = currentUserProfile?.role;
+      const page = officerDashboards[role] || 'house_tutor_dashboard.html';
+      window.location.href = `./${page}`;
+    }
+
+    async function loadData() {
+      if (!fileId) {
+        showMessage('Missing file id', 'error');
+        return;
+      }
+
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        window.location.href = '../index.html';
+        return;
+      }
+
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('id, name, role')
+        .eq('id', user.id)
+        .single();
+
+      currentUserProfile = profile;
+      document.getElementById('backBtn').addEventListener('click', goDashboard);
+
+      // Load file with approvals
+      const { data: file, error } = await supabase
+        .from('files')
+        .select(`
+          *,
+          supervisor:profiles!files_supervisor_id_fkey (id, name),
+          application_approvals(
+            id,
+            role,
+            role_order,
+            approved_by,
+            status,
+            approved_at,
+            approver:profiles!approved_by (id, name, role)
+          )
+        `)
+        .eq('id', fileId)
+        .single();
+
+      if (error) {
+        console.error('Load error:', error);
+        showMessage('Error loading file', 'error');
+        return;
+      }
+
+      currentFile = file;
+      console.log('Loaded file:', file);
+      console.log('Approvals:', file.application_approvals);
+
+      // Display file info
+      document.getElementById('fileTitle').textContent = file.title || 'Untitled';
+      document.getElementById('submittedBy').textContent = file.supervisor?.name || 'Unknown';
+      document.getElementById('submittedAt').textContent = file.created_at ? new Date(file.created_at).toLocaleString() : '-';
+      const derivedState = deriveFileState(file);
+      document.getElementById('currentStep').textContent = formatRoleName(derivedState.currentStep);
+     let desc = file.description;
+      try {
+        const parsed = JSON.parse(desc);
+        desc = parsed.description || desc;
+      } catch (e) {}
+
+document.getElementById('fileDescription').textContent = desc;
+
+      const statusClass = derivedState.status === 'approved' ? 'status-approved' : derivedState.status === 'rejected' ? 'status-rejected' : 'status-pending';
+      const statusText = derivedState.status === 'approved' ? 'Approved ✅' : derivedState.status === 'rejected' ? 'Rejected ❌' : (derivedState.status === 'in_progress' ? 'In Progress ⏳' : 'Pending ⏳');
+      document.getElementById('fileStatus').className = `status-badge ${statusClass}`;
+      document.getElementById('fileStatus').innerHTML = statusText;
+
+      // File preview
+      if (file.file_url) {
+        const isPdf = file.file_url.toLowerCase().includes('.pdf');
+        const isImage = ['.png', '.jpg', '.jpeg', '.gif'].some(ext => file.file_url.toLowerCase().includes(ext));
+        if (isPdf || isImage) {
+          document.getElementById('filePreview').innerHTML = `<iframe src="${file.file_url}" style="width:100%; height:400px; border:none;"></iframe>`;
+        } else {
+          document.getElementById('filePreview').innerHTML = `<a href="${file.file_url}" target="_blank">📄 Click to view file</a>`;
+        }
+      }
+
+      // Render timeline
+      renderTimeline(derivedState.approvals || [], derivedState.currentStep, derivedState.status);
+
+      // Check if current user can act
+      const myRole = normalizeRole(currentUserProfile.role);
+      const canAct = (derivedState.status === 'pending' || derivedState.status === 'in_progress') && normalizeRole(derivedState.currentStep) === myRole;
+      
+      console.log('Can act?', canAct);
+      console.log('File status:', file.status);
+      console.log('File current_step:', file.current_step);
+      console.log('My role:', myRole);
+      
+      if (!canAct) {
+        setActionAvailability(false);
+        showMessage(`⚠️ You cannot act on this file. Current step: ${formatRoleName(derivedState.currentStep)}`, 'warning');
+      } else {
+        setActionAvailability(true);
+        showMessage(`✅ Your turn! Please review and approve/reject.`, 'notice');
+      }
+    }
+
+    function renderTimeline(approvals, currentStep, fileStatus) {
+      const timelineDiv = document.getElementById('timeline');
+      
+      if (!approvals || approvals.length === 0) {
+        timelineDiv.innerHTML = '<div class="warning">⚠️ No approval steps found!</div>';
+        return;
+      }
+
+      const sorted = [...approvals].sort((a, b) => a.role_order - b.role_order);
+      
+      timelineDiv.innerHTML = sorted.map(step => {
+        const normalizedStatus = String(step.status || '').toLowerCase();
+        const isRejected = normalizedStatus === 'rejected';
+        const isCurrent = normalizedStatus === 'pending' && normalizeRole(step.role) === normalizeRole(currentStep) && fileStatus !== 'approved' && fileStatus !== 'rejected';
+        const { statusClass, statusText, iconClass, iconHtml } = getTimelineStepPresentation(step.status, isCurrent && !isRejected);
+        
+        const approverName = step.approver?.name || (step.approved_by ? 'Assigned Officer' : 'Not assigned');
+        
+        return `
+          <div class="timeline-step ${statusClass}">
+            <div class="timeline-step-icon ${iconClass}">${iconHtml}</div>
+            <div class="timeline-step-content">
+              <div class="timeline-step-role">${formatRoleName(step.role)}</div>
+              <div class="timeline-step-name">👤 ${approverName}</div>
+              ${step.approved_at ? `<div class="timeline-step-date">📅 ${new Date(step.approved_at).toLocaleString()}</div>` : ''}
+            </div>
+            <div class="timeline-step-status ${statusClass}">${statusText}</div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // ** বাটন ইভেন্ট - এটাই মূল ফিক্স **
+    document.getElementById('approveBtn').addEventListener('click', async function() {
+      console.log('✅ Approve button clicked!');
+      
+      if (!fileId) {
+        showMessage('No file ID', 'error');
+        return;
+      }
+      
+      const comments = document.getElementById('comments').value;
+      console.log('Comments:', comments);
+      
+      setBusy(true);
+      
+      try {
+        const result = await approveFile(fileId, comments);
+        console.log('Approve result:', result);
+        
+        if (result && result.success) {
+          showMessage('✅ Approved successfully! Redirecting...', 'notice');
+          setTimeout(() => {
+            window.location.reload();
+          }, 2000);
+        } else {
+          const errorMsg = result?.message || 'Unknown error';
+          showMessage(`❌ Approve failed: ${errorMsg}`, 'error');
+          setBusy(false);
+        }
+      } catch (error) {
+        console.error('Approve error:', error);
+        showMessage(`❌ Error: ${error.message}`, 'error');
+        setBusy(false);
+      }
+    });
+
+    document.getElementById('rejectBtn').addEventListener('click', async function() {
+      console.log('❌ Reject button clicked!');
+      
+      if (!fileId) {
+        showMessage('No file ID', 'error');
+        return;
+      }
+      
+      const comments = document.getElementById('comments').value;
+      console.log('Comments:', comments);
+      
+      if (!comments) {
+        showMessage('Please provide a reason for rejection', 'warning');
+        return;
+      }
+      
+      setBusy(true);
+      
+      try {
+        const result = await rejectFile(fileId, comments);
+        console.log('Reject result:', result);
+        
+        if (result && result.success) {
+          showMessage('❌ Rejected successfully! Redirecting...', 'notice');
+          setTimeout(() => {
+            window.location.reload();
+          }, 2000);
+        } else {
+          const errorMsg = result?.message || 'Unknown error';
+          showMessage(`❌ Reject failed: ${errorMsg}`, 'error');
+          setBusy(false);
+        }
+      } catch (error) {
+        console.error('Reject error:', error);
+        showMessage(`❌ Error: ${error.message}`, 'error');
+        setBusy(false);
+      }
+    });
+
+    // Start loading
+    loadData();
+  </script>
+</body>
+</html>

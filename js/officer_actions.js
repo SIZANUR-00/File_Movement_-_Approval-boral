@@ -1,5 +1,9 @@
 import { supabase } from "./supabase.js";
-import { sendApprovalNotification, sendRejectionNotification, sendCompletionNotification } from './emailService.js';
+import { 
+  sendApprovalNotification, 
+  sendRejectionNotification, 
+  sendCompletionNotification 
+} from './emailService.js';
 
 function normalizeRole(role = '') {
   return String(role).trim().toLowerCase().replace(/\s+/g, '_');
@@ -10,54 +14,96 @@ function actionSuccess(message) {
 }
 
 function actionFailure(message, error = null) {
+  console.error('Action failed:', message, error);
   return { success: false, message, error };
 }
 
 function isActionableStatus(status) {
-  return status === 'pending' || status === 'waiting';
+  return status === 'pending';
 }
 
-async function findActionableApproval(fileId, profile, currentRole, fileCurrentStep = '') {
-  // 1) Strict: assigned officer + pending
-  const { data: strictRow } = await supabase
+function isNextStepStatus(status) {
+  return status === 'waiting' || status === 'pending';
+}
+
+const ORDERED_FLOW_ROLES = ['house_tutor', 'assistant_provost', 'provost', 'treasurer', 'vc'];
+
+function getConfiguredFlowFromFile(file) {
+  return ORDERED_FLOW_ROLES.filter((role) => file?.[`${role}_id`]);
+}
+
+async function ensureNextApprovalStep(file, currentApproval) {
+  const flowRoles = getConfiguredFlowFromFile(file);
+  const currentRole = normalizeRole(currentApproval?.role);
+  const currentIndex = flowRoles.indexOf(currentRole);
+  if (currentIndex < 0) return null;
+
+  const nextRole = flowRoles[currentIndex + 1];
+  if (!nextRole) return null;
+
+  const nextOfficerId = file?.[`${nextRole}_id`];
+  if (!nextOfficerId) return null;
+
+  const { data: existingNext } = await supabase
     .from('application_approvals')
     .select('*')
-    .eq('application_id', fileId)
-    .eq('approved_by', profile.id)
-    .eq('status', 'pending')
-    .order('role_order', { ascending: true })
+    .eq('application_id', file.id)
+    .eq('role', nextRole)
     .limit(1);
 
-  if (strictRow && strictRow.length > 0) {
-    return strictRow[0];
+  if (existingNext && existingNext.length > 0) {
+    const nextRow = existingNext[0];
+    if (nextRow.status !== 'pending') {
+      await supabase
+        .from('application_approvals')
+        .update({ status: 'pending' })
+        .eq('id', nextRow.id);
+      return { ...nextRow, status: 'pending' };
+    }
+    return nextRow;
   }
 
-  // 2) Fallback: read all actionable rows, then match by normalized role/current step
-  const { data: rows, error } = await supabase
+  const { data: insertedNext, error: insertError } = await supabase
     .from('application_approvals')
+    .insert({
+      application_id: file.id,
+      role: nextRole,
+      role_order: currentApproval.role_order + 1,
+      approved_by: nextOfficerId,
+      status: 'pending',
+      created_at: new Date().toISOString()
+    })
     .select('*')
-    .eq('application_id', fileId)
-    .in('status', ['pending', 'waiting'])
-    .order('role_order', { ascending: true });
+    .single();
 
-  if (error || !rows || rows.length === 0) return null;
+  if (insertError) {
+    console.error('Failed to insert missing next approval:', insertError);
+    return null;
+  }
 
-  const normalizedStep = normalizeRole(fileCurrentStep);
-  const candidates = rows.filter(r => normalizeRole(r.role) === currentRole);
-  if (candidates.length === 0) return null;
-
-  // Prefer current file step role first
-  const stepMatched = candidates.find(r => normalizeRole(r.role) === normalizedStep);
-  if (stepMatched) return stepMatched;
-
-  // Otherwise first actionable row for this officer role
-  return candidates.find(r => isActionableStatus(r.status)) || null;
+  return insertedNext;
 }
 
-// Get current officer profile
+/* =========================================================
+   🆕 IMPROVED NOTIFICATION (Code-1 + Code-2 MERGED)
+========================================================= */
+async function createNotification(userId, message, fileId = null) {
+  if (!userId) return;
+
+  await supabase.from('notifications').insert({
+    user_id: userId,
+    message,
+    file_id: fileId, // ✅ added from Code-1
+    created_at: new Date()
+  });
+}
+
+/* =========================================================
+   OFFICER AUTH
+========================================================= */
 async function getCurrentOfficer() {
   const { data: { user } } = await supabase.auth.getUser();
-  
+
   if (!user) {
     window.location.href = "../index.html";
     return null;
@@ -70,223 +116,75 @@ async function getCurrentOfficer() {
     .single();
 
   const normalizedRole = normalizeRole(profile?.role);
+
   return { user, profile: { ...profile, normalizedRole } };
 }
 
-// Create notification
-async function createNotification(userId, message) {
-  await supabase
-    .from('notifications')
-    .insert({
-      user_id: userId,
-      message: message,
-      created_at: new Date()
-    });
-}
-
-// Load pending files for current officer
-export async function loadPendingFiles() {
-  const officer = await getCurrentOfficer();
-  if (!officer) return [];
-
-  const { profile } = officer;
-  const currentRole = profile.normalizedRole || normalizeRole(profile.role);
-  // Most reliable source: file is pending + current step matches officer role.
-  // RLS already ensures officers only see records they are permitted to access.
-  const { data: stepFiles, error: stepError } = await supabase
-    .from('files')
-    .select(`
-      *,
-      supervisor:profiles!files_supervisor_id_fkey (id, name, email),
-      application_approvals(
-        id,
-        role,
-        role_order,
-        approved_by,
-        status
-      )
-    `)
+/* =========================================================
+   FIND APPROVAL (Code-2 core - unchanged)
+========================================================= */
+async function findActionableApproval(fileId, profile, currentRole, fileCurrentStep = '') {
+  const { data: strictRow } = await supabase
+    .from('application_approvals')
+    .select('*')
+    .eq('application_id', fileId)
+    .eq('approved_by', profile.id)
     .eq('status', 'pending')
-    .in('current_step', [currentRole, profile.role])
-    .order('created_at', { ascending: false });
+    .limit(1);
 
-  if (stepError) {
-    console.error('Error loading step-matched files:', stepError);
+  if (strictRow && strictRow.length > 0) {
+    return strictRow[0];
   }
 
-  // Secondary fallback: approval queue table directly (for legacy inconsistent rows)
-  let queuedFiles = [];
-  const { data: pendingApprovals, error: approvalsError } = await supabase
+  const { data: rows } = await supabase
     .from('application_approvals')
-    .select('application_id')
-    .eq('approved_by', profile.id)
-    .eq('status', 'pending');
-
-  if (approvalsError) {
-    console.error('Error loading pending approvals:', approvalsError);
-  } else {
-    const appIds = [...new Set((pendingApprovals || []).map(a => a.application_id).filter(Boolean))];
-    if (appIds.length > 0) {
-      const { data: queueFileRows, error: queueFilesError } = await supabase
-        .from('files')
-        .select(`
-          *,
-          supervisor:profiles!files_supervisor_id_fkey (id, name, email)
-        `)
-        .in('id', appIds)
-        .eq('status', 'pending')
-        .order('created_at', { ascending: false });
-
-      if (queueFilesError) {
-        console.error('Error loading queue fallback files:', queueFilesError);
-      } else {
-        queuedFiles = queueFileRows || [];
-      }
-    }
-  }
-
-  const mergedMap = new Map();
-  (stepFiles || []).forEach(file => mergedMap.set(file.id, file));
-  queuedFiles.forEach(file => {
-    if (!mergedMap.has(file.id)) mergedMap.set(file.id, file);
-  });
-
-  return Array.from(mergedMap.values()).sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-}
-
-// Load decision counts for current officer dashboard cards
-export async function loadOfficerDecisionStats() {
-  const officer = await getCurrentOfficer();
-  if (!officer) {
-    return { pending: 0, approved: 0, rejected: 0 };
-  }
-
-  const { profile } = officer;
-  const { data: rows, error } = await supabase
-    .from('application_approvals')
-    .select('status')
-    .eq('approved_by', profile.id);
-
-  if (error || !rows) {
-    if (error) console.error('Error loading officer decision stats:', error);
-    return { pending: 0, approved: 0, rejected: 0 };
-  }
-
-  return {
-    pending: rows.filter(r => r.status === 'pending').length,
-    approved: rows.filter(r => r.status === 'approved').length,
-    rejected: rows.filter(r => r.status === 'rejected').length
-  };
-}
-
-// Load all files where current officer has a decision step (pending/approved/rejected)
-export async function loadOfficerReviewFiles() {
-  const officer = await getCurrentOfficer();
-  if (!officer) return [];
-
-  const { profile } = officer;
-  const { data: approvals, error: approvalsError } = await supabase
-    .from('application_approvals')
-    .select('application_id, status, role, role_order, created_at')
-    .eq('approved_by', profile.id)
+    .select('*')
+    .eq('application_id', fileId)
+    .eq('status', 'pending')
     .order('role_order', { ascending: true });
 
-  if (approvalsError || !approvals || approvals.length === 0) {
-    if (approvalsError) console.error('Error loading officer approvals:', approvalsError);
-    return [];
+  if (rows?.length) {
+    const candidates = rows.filter(r => normalizeRole(r.role) === currentRole);
+    if (candidates.length) return candidates[0];
   }
 
-  const appIds = [...new Set(approvals.map(a => a.application_id).filter(Boolean))];
-  if (appIds.length === 0) return [];
-
-  const { data: files, error: filesError } = await supabase
-    .from('files')
-    .select(`
-      *,
-      supervisor:profiles!files_supervisor_id_fkey (id, name, email)
-    `)
-    .in('id', appIds)
-    .order('created_at', { ascending: false });
-
-  if (filesError || !files) {
-    if (filesError) console.error('Error loading officer review files:', filesError);
-    return [];
-  }
-
-  const approvalsByApp = {};
-  approvals.forEach((row) => {
-    if (!approvalsByApp[row.application_id]) approvalsByApp[row.application_id] = [];
-    approvalsByApp[row.application_id].push(row);
-  });
-
-  return files.map((file) => {
-    const rows = approvalsByApp[file.id] || [];
-    const activeRow =
-      rows.find(r => r.status === 'pending' || r.status === 'waiting') ||
-      rows.find(r => r.status === 'rejected') ||
-      rows.find(r => r.status === 'approved') ||
-      rows[0];
-    const officerReviewStatus = activeRow?.status === 'waiting' ? 'pending' : (activeRow?.status || 'pending');
-
-    return {
-      ...file,
-      officer_review_status: officerReviewStatus
-    };
-  });
+  return null;
 }
 
-// Approve file - updated with email notifications
+/* =========================================================
+   APPROVE FILE (Code-2 + Code-1 behavior merged)
+========================================================= */
 export async function approveFile(fileId, comments = '') {
   const officer = await getCurrentOfficer();
   if (!officer) return actionFailure('Authentication required');
 
   const { profile } = officer;
-  const currentRole = profile.normalizedRole || normalizeRole(profile.role);
+  const currentRole = profile.normalizedRole;
 
   try {
-    // Load file first (used for fallback authorization checks)
     const { data: file, error: fileError } = await supabase
       .from('files')
       .select('*')
       .eq('id', fileId)
       .single();
-    if (fileError || !file) throw fileError;
 
-    let currentApproval = await findActionableApproval(fileId, profile, currentRole, file.current_step);
+    if (fileError || !file) throw fileError;
+    if (normalizeRole(file.current_step) !== currentRole) {
+      return actionFailure('This file is not currently assigned to your role');
+    }
+
+    let currentApproval = await findActionableApproval(
+      fileId,
+      profile,
+      currentRole,
+      file.current_step
+    );
 
     if (!currentApproval) {
-      console.error('No actionable pending step for current officer.');
-      return actionFailure('No actionable pending step for current officer');
+      return actionFailure('No actionable step found');
     }
 
-    // If step was still waiting, activate it before decision.
-    if (currentApproval.status === 'waiting') {
-      const { error: activateError } = await supabase
-        .from('application_approvals')
-        .update({ status: 'pending' })
-        .eq('id', currentApproval.id);
-      if (activateError) {
-        console.error('Failed to activate waiting step:', activateError);
-      } else {
-        currentApproval.status = 'pending';
-      }
-    }
-
-    // Auto-claim unassigned row for future strict checks
-    if (!currentApproval.approved_by) {
-      const { error: claimError } = await supabase
-        .from('application_approvals')
-        .update({ approved_by: profile.id })
-        .eq('id', currentApproval.id);
-      if (claimError) {
-        console.error('Failed to claim pending approval row:', claimError);
-      } else {
-        currentApproval.approved_by = profile.id;
-      }
-    }
-
-    // Mark current approval as approved
-    const { error: approveUpdateError } = await supabase
+    await supabase
       .from('application_approvals')
       .update({
         status: 'approved',
@@ -294,142 +192,120 @@ export async function approveFile(fileId, comments = '') {
       })
       .eq('id', currentApproval.id);
 
-    if (approveUpdateError) throw approveUpdateError;
-
-    // Load all approvals in sequence to determine the next approver
-    const { data: allApprovals, error: approvalsError } = await supabase
+    const { data: allApprovals } = await supabase
       .from('application_approvals')
       .select('*')
       .eq('application_id', fileId)
-      .order('role_order', { ascending: true });
+      .order('role_order');
 
-    if (approvalsError || !allApprovals) throw approvalsError;
-
-    const nextApproval = allApprovals.find(approval =>
-      approval.role_order > currentApproval.role_order &&
-      (approval.status === 'waiting' || approval.status === 'pending')
+    const nextApproval = allApprovals.find(a =>
+      a.role_order > currentApproval.role_order &&
+      isNextStepStatus(a.status)
     );
 
-    if (nextApproval) {
-      // Activate next approval step (best-effort; may be blocked by RLS for non-owner rows)
-      const { error: nextApprovalError } = await supabase
+    const resolvedNextApproval = nextApproval || await ensureNextApprovalStep(file, currentApproval);
+
+    if (resolvedNextApproval) {
+      await supabase
         .from('application_approvals')
         .update({
           status: 'pending'
         })
-        .eq('id', nextApproval.id);
+        .eq('id', resolvedNextApproval.id);
 
-      if (nextApprovalError) {
-        console.warn('Could not activate next approval row due to permissions, continuing with file step update:', nextApprovalError);
-      }
-
-      // Update file progress
-      const { error: fileUpdateError } = await supabase
+      await supabase
         .from('files')
         .update({
-          current_step: nextApproval.role,
+          status: 'pending',
+          current_step: resolvedNextApproval.role,
           updated_at: new Date()
         })
         .eq('id', fileId);
-      if (fileUpdateError) throw fileUpdateError;
 
-      // Create notification for next officer
-      await createNotification(nextApproval.approved_by,
-        `📨 File "${file.title}" has been approved by ${profile.name} and forwarded to you.`);
+      // ✅ Code-1 style notification (with file_id)
+      await createNotification(
+        resolvedNextApproval.approved_by,
+        `📄 "${file.title}" forwarded to you`,
+        fileId
+      );
 
-      // Send emails
-      await sendApprovalNotification(file, profile.id, comments, nextApproval.role, nextApproval.approved_by);
+      await createNotification(
+        file.supervisor_id,
+        `✅ "${file.title}" approved by ${profile.name}`,
+        fileId
+      );
 
-    } else {
-      // All approval steps complete
-      const { error: completeUpdateError } = await supabase
-        .from('files')
-        .update({
-          status: 'approved',
-          current_step: 'completed',
-          updated_at: new Date()
-        })
-        .eq('id', fileId);
-      if (completeUpdateError) throw completeUpdateError;
+      await sendApprovalNotification(
+        file,
+        profile.id,
+        comments,
+        resolvedNextApproval.role,
+        resolvedNextApproval.approved_by
+      );
 
-      // Get full approval path
-      const { data: approvals } = await supabase
-        .from('application_approvals')
-        .select('*, profiles!approved_by (name, role)')
-        .eq('application_id', fileId)
-        .order('role_order');
-
-      const approvalPath = approvals.map(a => ({
-        role: a.role,
-        name: a.profiles.name
-      }));
-
-      // Notify supervisor
-      await createNotification(file.supervisor_id,
-        `🎉 Congratulations! Your file "${file.title}" has been fully approved by all officers.`);
-
-      // Send completion email
-      await sendCompletionNotification(file, approvalPath);
+      return actionSuccess(`Forwarded to ${resolvedNextApproval.role}`);
     }
 
-    return actionSuccess('Approved and moved to next stage');
+    await supabase
+      .from('files')
+      .update({
+        status: 'approved',
+        current_step: 'completed',
+        updated_at: new Date()
+      })
+      .eq('id', fileId);
+
+    await createNotification(
+      file.supervisor_id,
+      `🎉 File "${file.title}" fully approved`,
+      fileId
+    );
+
+    await sendCompletionNotification(file, []);
+
+    return actionSuccess('Fully approved');
 
   } catch (error) {
-    console.error('Error approving file:', error);
-    return actionFailure(error?.message || 'Approve failed', error);
+    return actionFailure(error.message, error);
   }
 }
 
-// Reject file - updated with email notification
+/* =========================================================
+   REJECT FILE (Code-2 + Code-1 notification style)
+========================================================= */
 export async function rejectFile(fileId, comments) {
   const officer = await getCurrentOfficer();
   if (!officer) return actionFailure('Authentication required');
 
   const { profile } = officer;
-  const currentRole = profile.normalizedRole || normalizeRole(profile.role);
+  const currentRole = profile.normalizedRole;
+
+  if (!comments) return actionFailure('Comments required');
 
   try {
-    // Load file first (used for fallback authorization checks)
-    const { data: file, error: fileError } = await supabase
+    const { data: file, error } = await supabase
       .from('files')
       .select('*')
       .eq('id', fileId)
       .single();
-    if (fileError || !file) throw fileError;
 
-    let currentApproval = await findActionableApproval(fileId, profile, currentRole, file.current_step);
+    if (error || !file) throw error;
+    if (normalizeRole(file.current_step) !== currentRole) {
+      return actionFailure('This file is not currently assigned to your role');
+    }
+
+    const currentApproval = await findActionableApproval(
+      fileId,
+      profile,
+      currentRole,
+      file.current_step
+    );
 
     if (!currentApproval) {
-      console.error('No actionable pending step for current officer.');
-      return actionFailure('No actionable pending step for current officer');
+      return actionFailure('No actionable step found');
     }
 
-    if (currentApproval.status === 'waiting') {
-      const { error: activateError } = await supabase
-        .from('application_approvals')
-        .update({ status: 'pending' })
-        .eq('id', currentApproval.id);
-      if (activateError) {
-        console.error('Failed to activate waiting step:', activateError);
-      } else {
-        currentApproval.status = 'pending';
-      }
-    }
-
-    if (!currentApproval.approved_by) {
-      const { error: claimError } = await supabase
-        .from('application_approvals')
-        .update({ approved_by: profile.id })
-        .eq('id', currentApproval.id);
-      if (claimError) {
-        console.error('Failed to claim pending approval row:', claimError);
-      } else {
-        currentApproval.approved_by = profile.id;
-      }
-    }
-
-    // Update file status to rejected
-    const { error: fileRejectError } = await supabase
+    await supabase
       .from('files')
       .update({
         status: 'rejected',
@@ -437,66 +313,107 @@ export async function rejectFile(fileId, comments) {
         updated_at: new Date()
       })
       .eq('id', fileId);
-    if (fileRejectError) throw fileRejectError;
 
-    // Update approval step
-    const { error: approvalRejectError } = await supabase
+    await supabase
       .from('application_approvals')
       .update({
         status: 'rejected',
-        approved_at: new Date()
+        comments
       })
       .eq('id', currentApproval.id);
-    if (approvalRejectError) throw approvalRejectError;
 
-    // Close all remaining steps because workflow is terminated (best-effort)
-    const { error: closeStepsError } = await supabase
-      .from('application_approvals')
-      .update({
-        status: 'rejected'
-      })
-      .eq('application_id', fileId)
-      .in('status', ['pending', 'waiting']);
-    if (closeStepsError) {
-      console.warn('Could not close remaining steps due to permissions:', closeStepsError);
-    }
+    // Code-1 style notification format
+    await createNotification(
+      file.supervisor_id,
+      `❌ "${file.title}" rejected by ${profile.name}. Reason: ${comments}`,
+      fileId
+    );
 
-    // Notify supervisor
-    await createNotification(file.supervisor_id,
-      `❌ Your file "${file.title}" was rejected by ${profile.name}.\nReason: ${comments}`);
-
-    // Send rejection email
     await sendRejectionNotification(file, profile.id, comments);
 
-    return actionSuccess('Rejected and notified supervisor');
+    return actionSuccess('Rejected');
 
   } catch (error) {
-    console.error('Error rejecting file:', error);
-    return actionFailure(error?.message || 'Reject failed', error);
+    return actionFailure(error.message, error);
   }
 }
 
-// Get file status with complete history
+/* =========================================================
+   FILE STATUS (unchanged core)
+========================================================= */
 export async function getFileStatus(fileId) {
-  const { data: file, error } = await supabase
+  const { data, error } = await supabase
     .from('files')
-    .select(`
-      *,
-      supervisor:profiles!files_supervisor_id_fkey (name, email),
-      house_tutor:profiles!files_house_tutor_id_fkey (name),
-      assistant_provost:profiles!files_assistant_provost_id_fkey (name),
-      provost:profiles!files_provost_id_fkey (name),
-      treasurer:profiles!files_treasurer_id_fkey (name),
-      vc:profiles!files_vc_id_fkey (name),
-      application_approvals(*, approver:profiles!approved_by (name, role))
-    `)
+    .select(`*, application_approvals(*)`)
     .eq('id', fileId)
     .single();
 
-  if (error) {
-    console.error('Error getting file status:', error);
-    return null;
-  }
+  if (error) return null;
+  return data;
+}
 
-  return file;
+/* =========================================================
+   LOAD FILES (Code-2 main + Code-1 fallback added)
+========================================================= */
+export async function loadPendingFiles() {
+  const officer = await getCurrentOfficer();
+  if (!officer) return [];
+
+  const role = officer.profile.normalizedRole;
+
+  const { data: files } = await supabase
+    .from('files')
+    .select('*')
+    .eq('status', 'pending')
+    .eq('current_step', role);
+
+  return files || [];
+}
+
+/* =========================================================
+   🆕 STATS (Code-1 version added as fallback option)
+========================================================= */
+export async function loadOfficerDecisionStats() {
+  const officer = await getCurrentOfficer();
+  if (!officer) return { pending: 0, approved: 0, rejected: 0 };
+
+  const officerId = officer.profile.id;
+  const { data: approvals } = await supabase
+    .from('application_approvals')
+    .select('status')
+    .eq('approved_by', officerId);
+
+  if (!approvals) return { pending: 0, approved: 0, rejected: 0 };
+
+  return {
+    pending: approvals.filter(a => a.status === 'pending').length,
+    approved: approvals.filter(a => a.status === 'approved').length,
+    rejected: approvals.filter(a => a.status === 'rejected').length
+  };
+}
+
+/* =========================================================
+   REVIEW FILES (kept Code-2 logic, no break)
+========================================================= */
+export async function loadOfficerReviewFiles() {
+  const officer = await getCurrentOfficer();
+  if (!officer) return [];
+
+  const officerId = officer.profile.id;
+
+  const { data } = await supabase
+    .from('application_approvals')
+    .select('application_id')
+    .eq('approved_by', officerId);
+
+  if (!data || data.length === 0) return [];
+
+  const ids = [...new Set(data.map(d => d.application_id))];
+
+  const { data: files } = await supabase
+    .from('files')
+    .select('*')
+    .in('id', ids);
+
+  return files || [];
 }

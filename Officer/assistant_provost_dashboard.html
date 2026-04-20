@@ -11,8 +11,8 @@
   <!-- Font Awesome 6 -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
+  <link rel="stylesheet" href="../css/responsive-global.css">
   <style>
-    /* Same base styles as house_tutor_dashboard */
     * {
       margin: 0;
       padding: 0;
@@ -231,6 +231,12 @@
       align-items: center;
       gap: 1.5rem;
       transition: all 0.3s ease;
+      cursor: pointer;
+    }
+
+    .stat-card.active-filter {
+      border: 2px solid var(--primary);
+      box-shadow: 0 0 0 3px rgba(155, 89, 182, 0.1);
     }
 
     .stat-card:hover {
@@ -699,7 +705,17 @@
     </div>
 
     <div class="stats-grid">
-      <div class="stat-card">
+      <div class="stat-card filterable active-filter" data-filter="all">
+        <div class="stat-icon">
+          <i class="fas fa-chart-line"></i>
+        </div>
+        <div class="stat-info">
+          <h3 id="totalCount">0</h3>
+          <p>Total Files</p>
+        </div>
+      </div>
+      
+      <div class="stat-card filterable" data-filter="pending">
         <div class="stat-icon">
           <i class="fas fa-clock"></i>
         </div>
@@ -709,7 +725,7 @@
         </div>
       </div>
       
-      <div class="stat-card">
+      <div class="stat-card filterable" data-filter="approved">
         <div class="stat-icon">
           <i class="fas fa-check-circle"></i>
         </div>
@@ -719,13 +735,13 @@
         </div>
       </div>
       
-      <div class="stat-card">
+      <div class="stat-card filterable" data-filter="rejected">
         <div class="stat-icon">
-          <i class="fas fa-hourglass-half"></i>
+          <i class="fas fa-times-circle"></i>
         </div>
         <div class="stat-info">
-          <h3 id="fromTutorCount">0</h3>
-          <p>From House Tutor</p>
+          <h3 id="rejectedCount">0</h3>
+          <p>Rejected</p>
         </div>
       </div>
     </div>
@@ -734,11 +750,14 @@
       <div class="card-header">
         <h2>
           <i class="fas fa-inbox"></i>
-          Applications to Review
+          Applications for Review
         </h2>
         <div class="filter-section">
-          <select class="filter-select" id="tutorFilter">
-            <option value="all">All House Tutors</option>
+          <select class="filter-select" id="statusFilter">
+            <option value="all">All Status</option>
+            <option value="pending">Pending</option>
+            <option value="approved">Approved</option>
+            <option value="rejected">Rejected</option>
           </select>
         </div>
       </div>
@@ -748,7 +767,7 @@
           <thead>
             <tr>
               <th>Student</th>
-              <th>House Tutor</th>
+              <th>From</th>
               <th>Application</th>
               <th>Submitted</th>
               <th>Status</th>
@@ -759,7 +778,7 @@
             <tr>
               <td colspan="6" class="empty-state">
                 <i class="fas fa-inbox"></i>
-                <p>No pending applications</p>
+                <p>No applications found</p>
               </td>
             </tr>
           </tbody>
@@ -776,6 +795,7 @@
       <div class="file-info" id="fileDetails">
         <p><strong>File:</strong> <span id="fileTitle"></span></p>
         <p><strong>From:</strong> <span id="fileSender"></span></p>
+        <p><strong>Current Step:</strong> <span id="currentStep"></span></p>
       </div>
       
       <div class="form-group">
@@ -804,9 +824,18 @@
   <script type="module">
     import { initRoleSwitcher } from '../js/components/RoleSwitcher.js';
     import { supabase } from '../js/supabase.js';
-    import { approveFile, rejectFile, loadPendingFiles, loadOfficerDecisionStats } from '../js/officer_actions.js';
+    import { approveFile, rejectFile } from '../js/officer_actions.js';
+    import { getLastApprovedRoleName } from '../js/dashboard_flow_helper.js';
+    import { deriveFileState, normalizeRole as normalizeFlowRole } from '../js/file_status_helper.js';
     
     let currentApplicationId = null;
+    let allFiles = [];
+    let currentFilter = 'all';
+    let currentUserProfile = null;
+
+    function normalizeRole(role) {
+      return String(role || '').trim().toLowerCase().replace(/\s+/g, '_');
+    }
 
     async function loadUserData() {
       try {
@@ -818,12 +847,14 @@
         
         const { data: profile } = await supabase
           .from('profiles')
-          .select('name')
+          .select('*')
           .eq('id', user.id)
           .single();
         
+        currentUserProfile = profile;
         document.getElementById('userName').textContent = profile?.name || 'User';
         document.getElementById('welcomeName').textContent = profile?.name?.split(' ')[0] || 'Assistant Provost';
+        document.getElementById('userRole').textContent = 'Asst. Provost';
 
         await loadApplications();
 
@@ -834,52 +865,194 @@
 
     async function loadApplications() {
       try {
-        const applications = await loadPendingFiles();
-        const stats = await loadOfficerDecisionStats();
+        const userRole = currentUserProfile?.role || 'assistant_provost';
+        const normalizedUserRole = normalizeRole(userRole);
+        const asstProvostId = currentUserProfile?.id;
         
-        document.getElementById('pendingCount').textContent = applications?.length || 0;
-        document.getElementById('approvedCount').textContent = stats.approved || 0;
-        document.getElementById('fromTutorCount').textContent = applications?.length || 0;
-
-        const tbody = document.getElementById('applicationsTable');
+        console.log('Loading applications for assistant provost, role:', normalizedUserRole);
         
-        if (!applications || applications.length === 0) {
-          tbody.innerHTML = `
-            <tr>
-              <td colspan="6" class="empty-state">
-                <i class="fas fa-check-circle"></i>
-                <p>No pending applications</p>
-              </td>
-            </tr>
-          `;
-          return;
+        // Method 1: Get files where assistant_provost is the assigned officer for current step
+        const { data: filesByRole, error: roleError } = await supabase
+          .from('files')
+          .select(`
+            *,
+            supervisor:profiles!files_supervisor_id_fkey (id, name, email),
+            house_tutor:profiles!files_house_tutor_id_fkey (id, name),
+            assistant_provost:profiles!files_assistant_provost_id_fkey (id, name),
+            provost:profiles!files_provost_id_fkey (id, name),
+            treasurer:profiles!files_treasurer_id_fkey (id, name),
+            vc:profiles!files_vc_id_fkey (id, name),
+            application_approvals(*, approver:profiles!approved_by (name, role))
+          `)
+          .eq('current_step', normalizedUserRole);
+        
+        if (roleError) {
+          console.error('Error loading by current_step:', roleError);
         }
+        
+        // Method 2: Get files from approval steps where assistant_provost is assigned and status is pending/waiting
+        const { data: approvalSteps, error: approvalError } = await supabase
+          .from('application_approvals')
+          .select(`
+            *,
+            application:files(
+              *,
+              supervisor:profiles!files_supervisor_id_fkey (id, name, email),
+              house_tutor:profiles!files_house_tutor_id_fkey (id, name),
+              assistant_provost:profiles!files_assistant_provost_id_fkey (id, name),
+              provost:profiles!files_provost_id_fkey (id, name),
+              treasurer:profiles!files_treasurer_id_fkey (id, name),
+              vc:profiles!files_vc_id_fkey (id, name)
+            )
+          `)
+          .eq('role', normalizedUserRole)
+          .in('status', ['pending', 'waiting']);
+        
+        if (approvalError) {
+          console.error('Error loading by approval steps:', approvalError);
+        }
+        
+        // Combine and deduplicate files
+        const filesMap = new Map();
+        
+        if (filesByRole) {
+          filesByRole.forEach(file => {
+            if (!filesMap.has(file.id)) {
+              filesMap.set(file.id, { ...file, source: 'current_step' });
+            }
+          });
+        }
+        
+        if (approvalSteps) {
+          approvalSteps.forEach(step => {
+            if (step.application && !filesMap.has(step.application.id)) {
+              filesMap.set(step.application.id, { ...step.application, source: 'approval_step' });
+            }
+          });
+        }
+        
+        // Method 3: Also check assistant_provost_id column directly
+        if (asstProvostId) {
+          const { data: directFiles, error: directError } = await supabase
+            .from('files')
+            .select(`
+              *,
+              supervisor:profiles!files_supervisor_id_fkey (id, name, email),
+              house_tutor:profiles!files_house_tutor_id_fkey (id, name),
+              assistant_provost:profiles!files_assistant_provost_id_fkey (id, name),
+              provost:profiles!files_provost_id_fkey (id, name),
+              treasurer:profiles!files_treasurer_id_fkey (id, name),
+              vc:profiles!files_vc_id_fkey (id, name)
+            `)
+            .eq('assistant_provost_id', asstProvostId);
+          
+          if (directFiles) {
+            directFiles.forEach(file => {
+              if (!filesMap.has(file.id)) {
+                filesMap.set(file.id, { ...file, source: 'direct' });
+              }
+            });
+          }
+        }
+        
+        allFiles = Array.from(filesMap.values());
+        
+        // Also get all files for stats (including approved/rejected)
+        const { data: allStatsFiles } = await supabase
+          .from('files')
+          .select('id, status')
+          .or(`assistant_provost_id.eq.${asstProvostId},current_step.eq.${normalizedUserRole}`);
+        
+        const stats = {
+          total: allFiles.length,
+          pending: allFiles.filter((f) => {
+            const derived = deriveFileState(f);
+            return ['pending', 'in_progress'].includes(derived.status) && normalizeFlowRole(derived.currentStep) === 'assistant_provost';
+          }).length,
+          approved: allFiles.filter((f) => deriveFileState(f).status === 'approved').length,
+          rejected: allFiles.filter((f) => deriveFileState(f).status === 'rejected').length
+        };
+        
+        document.getElementById('totalCount').textContent = stats.total;
+        document.getElementById('pendingCount').textContent = stats.pending;
+        document.getElementById('approvedCount').textContent = stats.approved;
+        document.getElementById('rejectedCount').textContent = stats.rejected;
+        
+        renderApplications();
+        
+      } catch (error) {
+        console.error('Error loading applications:', error);
+      }
+    }
 
-        tbody.innerHTML = applications.map(app => `
+    function renderApplications() {
+      const tbody = document.getElementById('applicationsTable');
+      const statusFilter = document.getElementById('statusFilter')?.value || 'all';
+      const effectiveFilter = statusFilter === 'all' ? currentFilter : statusFilter;
+      
+      let filteredFiles = allFiles;
+      if (effectiveFilter !== 'all') {
+        filteredFiles = allFiles.filter((file) => deriveFileState(file).status === effectiveFilter);
+      }
+      
+      if (!filteredFiles || filteredFiles.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="6" class="empty-state">
+              <i class="fas fa-check-circle"></i>
+              <p>No ${effectiveFilter} applications found</p>
+            </td>
+          </tr>
+        `;
+        return;
+      }
+      
+      tbody.innerHTML = filteredFiles.map(app => {
+        const derivedState = deriveFileState(app);
+        const status = derivedState.status;
+        const statusClass = status === 'approved' ? 'status-approved' : 
+                           status === 'rejected' ? 'status-rejected' : 'status-pending';
+        const statusText = status === 'approved' ? 'Approved' : 
+                          status === 'rejected' ? 'Rejected' : (status === 'in_progress' ? 'In Progress' : 'Pending');
+        const fromRoleName = getLastApprovedRoleName(app);
+        
+        // Check if this file is actually actionable for assistant provost
+        const isAsstProvostPending = ['pending', 'in_progress'].includes(status) && normalizeFlowRole(derivedState.currentStep) === 'assistant_provost';
+        
+        return `
           <tr>
             <td>${app.supervisor?.name || 'Unknown'}</td>
-            <td>${app.house_tutor?.name || 'N/A'}</td>
-            <td>${app.title}</td>
+            <td>${fromRoleName}</td>
+            <td>${app.title || 'Untitled'}</td>
             <td>${new Date(app.created_at).toLocaleDateString()}</td>
-            <td><span class="status-badge status-pending">Pending</span></td>
+            <td><span class="status-badge ${statusClass}">${statusText}</span></td>
             <td>
               <div class="action-btns">
                 <button class="btn-sm btn-view" onclick="viewApplication('${app.id}')">
-                  <i class="fas fa-eye"></i>
+                  <i class="fas fa-eye"></i> View
                 </button>
-                <button class="btn-sm btn-approve" onclick="openReviewModal('${app.id}', '${app.title}', '${app.supervisor?.name || 'Unknown'}')">
-                  <i class="fas fa-check"></i>
-                </button>
-                <button class="btn-sm btn-reject" onclick="openRejectModal('${app.id}')">
-                  <i class="fas fa-times"></i>
-                </button>
+                ${isAsstProvostPending ? `
+                  <button class="btn-sm btn-approve" onclick="openReviewModal('${app.id}', '${app.title}', '${fromRoleName}')">
+                    <i class="fas fa-check"></i> Approve
+                  </button>
+                  <button class="btn-sm btn-reject" onclick="openRejectModal('${app.id}')">
+                    <i class="fas fa-times"></i> Reject
+                  </button>
+                ` : ''}
               </div>
             </td>
           </tr>
-        `).join('');
-      } catch (error) {
-        console.error('Error:', error);
-      }
+        `;
+      }).join('');
+    }
+
+    function setCardFilter(filter) {
+      currentFilter = filter;
+      document.querySelectorAll('.stat-card.filterable').forEach((card) => {
+        card.classList.toggle('active-filter', card.getAttribute('data-filter') === filter);
+      });
+      document.getElementById('statusFilter').value = 'all';
+      renderApplications();
     }
 
     window.viewApplication = function(id) {
@@ -890,6 +1063,7 @@
       currentApplicationId = id;
       document.getElementById('fileTitle').textContent = title;
       document.getElementById('fileSender').textContent = sender;
+      document.getElementById('currentStep').textContent = 'Assistant Provost Review';
       document.getElementById('reviewModal').classList.add('active');
     };
 
@@ -897,6 +1071,7 @@
       currentApplicationId = id;
       document.getElementById('fileTitle').textContent = 'Reject Application';
       document.getElementById('fileSender').textContent = '';
+      document.getElementById('currentStep').textContent = 'Assistant Provost Review';
       document.getElementById('reviewModal').classList.add('active');
     };
 
@@ -910,38 +1085,69 @@
       if (!currentApplicationId) return;
       
       const comments = document.getElementById('comments').value;
+      const approveModalBtn = document.querySelector('#reviewModal .btn-modal.btn-approve');
+      const rejectModalBtn = document.querySelector('#reviewModal .btn-modal.btn-reject');
+      const originalApproveHtml = approveModalBtn?.innerHTML;
+      const originalRejectHtml = rejectModalBtn?.innerHTML;
       
       if (action === 'reject' && !comments) {
         alert('Please provide reason for rejection');
         return;
       }
+
+      if (approveModalBtn) approveModalBtn.disabled = true;
+      if (rejectModalBtn) rejectModalBtn.disabled = true;
+      if (approveModalBtn) approveModalBtn.innerHTML = '<i class="fas fa-spinner fa-pulse"></i> Processing...';
+      if (rejectModalBtn) rejectModalBtn.innerHTML = '<i class="fas fa-spinner fa-pulse"></i> Processing...';
       
       if (action === 'approve') {
         const result = await approveFile(currentApplicationId, comments);
         if (result.success) {
-          alert('✅ File approved!');
+          if (approveModalBtn) approveModalBtn.innerHTML = '<i class="fas fa-check"></i> Approved';
         } else {
           alert(`❌ Approve failed: ${result.message || 'Unknown error'}`);
+          if (approveModalBtn) approveModalBtn.innerHTML = originalApproveHtml || '<i class="fas fa-check"></i> Approve & Forward';
+          if (rejectModalBtn) rejectModalBtn.innerHTML = originalRejectHtml || '<i class="fas fa-times"></i> Reject';
+          if (approveModalBtn) approveModalBtn.disabled = false;
+          if (rejectModalBtn) rejectModalBtn.disabled = false;
           return;
         }
       } else {
         const result = await rejectFile(currentApplicationId, comments);
         if (result.success) {
-          alert('❌ File rejected');
+          if (rejectModalBtn) rejectModalBtn.innerHTML = '<i class="fas fa-times"></i> Rejected';
         } else {
           alert(`❌ Reject failed: ${result.message || 'Unknown error'}`);
+          if (approveModalBtn) approveModalBtn.innerHTML = originalApproveHtml || '<i class="fas fa-check"></i> Approve & Forward';
+          if (rejectModalBtn) rejectModalBtn.innerHTML = originalRejectHtml || '<i class="fas fa-times"></i> Reject';
+          if (approveModalBtn) approveModalBtn.disabled = false;
+          if (rejectModalBtn) rejectModalBtn.disabled = false;
           return;
         }
       }
       
-      closeModal();
-      loadApplications();
+      setTimeout(() => {
+        closeModal();
+        loadApplications();
+      }, 700);
     };
+
+    document.getElementById('statusFilter').addEventListener('change', renderApplications);
+    document.querySelectorAll('.stat-card.filterable').forEach((card) => {
+      card.addEventListener('click', () => setCardFilter(card.getAttribute('data-filter')));
+    });
 
     await initRoleSwitcher();
     await loadUserData();
   </script>
 
   <script type="module" src="../js/auth.js"></script>
+  <script>
+    window.logout = async function() {
+      const { supabase } = await import('../js/supabase.js');
+      await supabase.auth.signOut();
+      window.location.href = '../index.html';
+    };
+  </script>
 </body>
 </html>

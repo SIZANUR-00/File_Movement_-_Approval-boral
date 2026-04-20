@@ -6,6 +6,7 @@
   <title>View File - Boral Hall</title>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="../css/responsive-global.css">
   <style>
     :root {
       --accent: #282424;
@@ -203,7 +204,8 @@
       color: #721c24;
     }
 
-    .status-in_progress {
+    .status-in_progress,
+    .status-in-progress {
       background: #cce5ff;
       color: #004085;
     }
@@ -212,6 +214,35 @@
       margin-top: 20px;
       display: flex;
       gap: 10px;
+    }
+
+    .file-preview {
+      background: white;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+      margin-top: 20px;
+    }
+
+    .preview-box {
+      margin-top: 12px;
+      border: 1px solid #e0e0e0;
+      border-radius: 10px;
+      min-height: 420px;
+      overflow: hidden;
+      background: #f8f9fa;
+    }
+
+    .preview-box iframe {
+      width: 100%;
+      height: 420px;
+      border: 0;
+      background: white;
+    }
+
+    .preview-empty {
+      padding: 20px;
+      color: #6b7280;
     }
 
     .btn-download {
@@ -260,15 +291,54 @@
       <h3><i class="fas fa-history"></i> Approval Timeline</h3>
       <div id="timelineSteps">Loading...</div>
     </div>
+
+    <div class="file-preview">
+      <h3><i class="fas fa-paperclip"></i> Attached File</h3>
+      <div id="filePreview" class="preview-box">
+        <div class="preview-empty">No file attached.</div>
+      </div>
+    </div>
   </div>
 
   <script type="module">
     import { supabase } from '../js/supabase.js';
+    import { deriveFileState, formatRoleName, getStatusPresentation } from '../js/file_status_helper.js';
     
     // Get file ID from URL
     const urlParams = new URLSearchParams(window.location.search);
     const fileId = urlParams.get('id');
     let currentFile = null;
+
+    function parseDescriptionPayload(rawDescription) {
+      if (!rawDescription || typeof rawDescription !== 'string') return null;
+      try {
+        return JSON.parse(rawDescription);
+      } catch {
+        return null;
+      }
+    }
+
+    function renderFilePreview(fileUrl) {
+      const previewEl = document.getElementById('filePreview');
+      if (!fileUrl) {
+        previewEl.innerHTML = '<div class="preview-empty">No file attached.</div>';
+        return;
+      }
+
+      const lowerUrl = fileUrl.toLowerCase();
+      const isPdf = lowerUrl.includes('.pdf');
+      const isImage = ['.png', '.jpg', '.jpeg', '.gif', '.webp'].some(ext => lowerUrl.includes(ext));
+      if (isPdf || isImage) {
+        previewEl.innerHTML = `<iframe src="${fileUrl}" title="Attachment Preview"></iframe>`;
+      } else {
+        previewEl.innerHTML = `
+          <div class="preview-empty">
+            Preview unavailable for this file type.<br>
+            <a href="${fileUrl}" target="_blank" rel="noopener noreferrer">Open in new tab</a>
+          </div>
+        `;
+      }
+    }
     
     async function loadFileDetails() {
       if (!fileId) {
@@ -300,25 +370,21 @@
       
       // Display file header
       document.getElementById('fileTitle').textContent = file.title;
-      document.getElementById('fileDescription').textContent = file.description || 'No description provided';
+      const payload = parseDescriptionPayload(file.description);
+      const cleanDescription = payload?.description || file.description || 'No description provided';
+      const attachedFileUrl = payload?.file_url || file.file_url || null;
+      document.getElementById('fileDescription').textContent = cleanDescription;
       document.getElementById('submittedDate').textContent = new Date(file.created_at).toLocaleString();
       
+      const derivedState = deriveFileState(file);
       const statusElement = document.getElementById('fileStatus');
-      const statusTextMap = {
-        pending: 'In Progress',
-        approved: 'Approved',
-        rejected: 'Rejected'
-      };
-      const statusClassMap = {
-        pending: 'status-in_progress',
-        approved: 'status-approved',
-        rejected: 'status-rejected'
-      };
-      statusElement.textContent = statusTextMap[file.status] || file.status;
-      statusElement.className = `status-badge ${statusClassMap[file.status] || 'status-pending'}`;
+      const statusMeta = getStatusPresentation(derivedState.status);
+      statusElement.textContent = statusMeta.label;
+      statusElement.className = `status-badge ${statusMeta.className}`;
       
       // Display timeline
       const steps = file.application_approvals.sort((a, b) => a.role_order - b.role_order);
+      const nextPendingStep = steps.find(s => s.status === 'pending');
       
       let timelineHtml = '';
       steps.forEach(step => {
@@ -329,6 +395,7 @@
           : step.status === 'waiting' ? 'fa-hourglass-half'
           : 'fa-clock';
         const approverName = step.approver?.name || 'Not assigned';
+        const commentText = step.comments || step.comment || step.remarks || step.note || '';
         const statusLabelMap = {
           approved: 'Approved',
           rejected: 'Rejected',
@@ -342,11 +409,12 @@
               <i class="fas ${icon}"></i>
             </div>
             <div class="step-content">
-              <h4>${step.role.replace('_', ' ').toUpperCase()}</h4>
+              <h4>${formatRoleName(step.role)}</h4>
               <p class="approver-name">${approverName}</p>
               <p class="approval-date"><strong>Status:</strong> ${statusLabelMap[step.status] || step.status}</p>
+              ${nextPendingStep && nextPendingStep.role === step.role && derivedState.status !== 'approved' && derivedState.status !== 'rejected' ? `<p class="approval-date"><strong>Next Active Stage</strong></p>` : ''}
               ${step.approved_at ? `<p class="approval-date">${new Date(step.approved_at).toLocaleString()}</p>` : ''}
-              ${step.comments ? `<div class="comments">"${step.comments}"</div>` : ''}
+              ${commentText ? `<div class="comments">"${commentText}"</div>` : ''}
               ${step.status === 'approved' ? `
                 <div class="digital-signature">
                   <span class="signature-text">✓ Digitally Signed by ${step.approver?.name}</span>
@@ -358,11 +426,14 @@
       });
       
       document.getElementById('timelineSteps').innerHTML = timelineHtml;
+      renderFilePreview(attachedFileUrl);
     }
     
     window.downloadFile = function() {
-      if (currentFile?.file_url) {
-        window.open(currentFile.file_url, '_blank');
+      const payload = parseDescriptionPayload(currentFile?.description);
+      const attachedFileUrl = payload?.file_url || currentFile?.file_url || null;
+      if (attachedFileUrl) {
+        window.open(attachedFileUrl, '_blank');
       } else {
         alert('File not available');
       }

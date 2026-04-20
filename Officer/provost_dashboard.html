@@ -11,6 +11,7 @@
   <!-- Font Awesome 6 -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
+  <link rel="stylesheet" href="../css/responsive-global.css">
   <style>
     * {
       margin: 0;
@@ -750,7 +751,7 @@
           <thead>
             <tr>
               <th>Student</th>
-              <th>From (Asst. Provost)</th>
+              <th>From</th>
               <th>Application</th>
               <th>Submitted</th>
               <th>Priority</th>
@@ -806,7 +807,9 @@
   <script type="module">
     import { initRoleSwitcher } from '../js/components/RoleSwitcher.js';
     import { supabase } from '../js/supabase.js';
-    import { approveFile, rejectFile, loadPendingFiles, loadOfficerDecisionStats } from '../js/officer_actions.js';
+    import { approveFile, rejectFile } from '../js/officer_actions.js';
+    import { getLastApprovedRoleName, normalizeRole } from '../js/dashboard_flow_helper.js';
+    import { deriveFileState, normalizeRole as normalizeFlowRole } from '../js/file_status_helper.js';
     
     let currentApplicationId = null;
 
@@ -836,16 +839,100 @@
 
     async function loadApplications() {
       try {
-        const applications = await loadPendingFiles();
-        const stats = await loadOfficerDecisionStats();
-        
-        document.getElementById('pendingCount').textContent = applications?.length || 0;
-        document.getElementById('approvedCount').textContent = stats.approved || 0;
-        document.getElementById('fromAsstCount').textContent = applications?.length || 0;
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('id, role')
+          .eq('id', user.id)
+          .single();
+
+        const normalizedUserRole = normalizeRole(profile?.role || 'provost');
+
+        const { data: filesByRole, error: filesByRoleError } = await supabase
+          .from('files')
+          .select(`
+            *,
+            supervisor:profiles!files_supervisor_id_fkey (id, name, email),
+            house_tutor:profiles!files_house_tutor_id_fkey (id, name),
+            assistant_provost:profiles!files_assistant_provost_id_fkey (id, name),
+            provost:profiles!files_provost_id_fkey (id, name),
+            treasurer:profiles!files_treasurer_id_fkey (id, name),
+            vc:profiles!files_vc_id_fkey (id, name),
+            application_approvals(*, approver:profiles!approved_by (name, role))
+          `)
+          .eq('current_step', normalizedUserRole);
+
+        if (filesByRoleError) {
+          console.error('Provost filesByRole error:', filesByRoleError);
+        }
+
+        const { data: approvalSteps, error: approvalStepsError } = await supabase
+          .from('application_approvals')
+          .select(`
+            *,
+            application:files(
+              *,
+              supervisor:profiles!files_supervisor_id_fkey (id, name, email),
+              house_tutor:profiles!files_house_tutor_id_fkey (id, name),
+              assistant_provost:profiles!files_assistant_provost_id_fkey (id, name),
+              provost:profiles!files_provost_id_fkey (id, name),
+              treasurer:profiles!files_treasurer_id_fkey (id, name),
+              vc:profiles!files_vc_id_fkey (id, name)
+            )
+          `)
+          .eq('role', normalizedUserRole)
+          .in('status', ['pending', 'waiting']);
+
+        if (approvalStepsError) {
+          console.error('Provost approvalSteps error:', approvalStepsError);
+        }
+
+        const { data: directFiles, error: directFilesError } = await supabase
+          .from('files')
+          .select(`
+            *,
+            supervisor:profiles!files_supervisor_id_fkey (id, name, email),
+            house_tutor:profiles!files_house_tutor_id_fkey (id, name),
+            assistant_provost:profiles!files_assistant_provost_id_fkey (id, name),
+            provost:profiles!files_provost_id_fkey (id, name),
+            treasurer:profiles!files_treasurer_id_fkey (id, name),
+            vc:profiles!files_vc_id_fkey (id, name),
+            application_approvals(*, approver:profiles!approved_by (name, role))
+          `)
+          .eq('provost_id', profile?.id);
+
+        if (directFilesError) {
+          console.error('Provost directFiles error:', directFilesError);
+        }
+
+        const filesMap = new Map();
+        (filesByRole || []).forEach((file) => filesMap.set(file.id, file));
+        (approvalSteps || []).forEach((step) => {
+          if (step.application && !filesMap.has(step.application.id)) {
+            filesMap.set(step.application.id, step.application);
+          }
+        });
+        (directFiles || []).forEach((file) => {
+          if (!filesMap.has(file.id)) {
+            filesMap.set(file.id, file);
+          }
+        });
+
+        const allFiles = Array.from(filesMap.values());
+        const pendingFiles = allFiles.filter((app) => {
+          const derived = deriveFileState(app);
+          return ['pending', 'in_progress'].includes(derived.status) && normalizeFlowRole(derived.currentStep) === 'provost';
+        });
+        const approvedFiles = allFiles.filter((app) => deriveFileState(app).status === 'approved');
+
+        document.getElementById('pendingCount').textContent = pendingFiles.length;
+        document.getElementById('approvedCount').textContent = approvedFiles.length;
+        document.getElementById('fromAsstCount').textContent = pendingFiles.length;
 
         const tbody = document.getElementById('applicationsTable');
-        
-        if (!applications || applications.length === 0) {
+        if (allFiles.length === 0) {
           tbody.innerHTML = `
             <tr>
               <td colspan="6" class="empty-state">
@@ -857,28 +944,42 @@
           return;
         }
 
-        tbody.innerHTML = applications.map(app => `
-          <tr>
-            <td>${app.supervisor?.name || 'Unknown'}</td>
-            <td>${app.assistant_provost?.name || 'N/A'}</td>
-            <td>${app.title}</td>
-            <td>${new Date(app.created_at).toLocaleDateString()}</td>
-            <td><span class="status-badge status-pending">Medium</span></td>
-            <td>
-              <div class="action-btns">
-                <button class="btn-sm btn-view" onclick="viewApplication('${app.id}')">
-                  <i class="fas fa-eye"></i>
-                </button>
-                <button class="btn-sm btn-approve" onclick="openReviewModal('${app.id}', '${app.title}', '${app.assistant_provost?.name || 'Unknown'}')">
-                  <i class="fas fa-check"></i>
-                </button>
-                <button class="btn-sm btn-reject" onclick="openRejectModal('${app.id}')">
-                  <i class="fas fa-times"></i>
-                </button>
-              </div>
-            </td>
-          </tr>
-        `).join('');
+        tbody.innerHTML = allFiles.map(app => {
+          const derivedState = deriveFileState(app);
+          const status = derivedState.status;
+          const statusClass =
+            status === 'approved' ? 'status-approved' :
+            status === 'rejected' ? 'status-rejected' : 'status-pending';
+          const statusText =
+            status === 'approved' ? 'Approved' :
+            status === 'rejected' ? 'Rejected' : (status === 'in_progress' ? 'In Progress' : 'Pending');
+          const isPending = ['pending', 'in_progress'].includes(status) && normalizeFlowRole(derivedState.currentStep) === 'provost';
+          const fromRoleName = getLastApprovedRoleName(app);
+          return `
+            <tr>
+              <td>${app.supervisor?.name || 'Unknown'}</td>
+              <td>${fromRoleName}</td>
+              <td>${app.title}</td>
+              <td>${new Date(app.created_at).toLocaleDateString()}</td>
+              <td><span class="status-badge ${statusClass}">${statusText}</span></td>
+              <td>
+                <div class="action-btns">
+                  <button class="btn-sm btn-view" onclick="viewApplication('${app.id}')">
+                    <i class="fas fa-eye"></i>
+                  </button>
+                  ${isPending ? `
+                    <button class="btn-sm btn-approve" onclick="openReviewModal('${app.id}', '${app.title}', '${fromRoleName}')">
+                      <i class="fas fa-check"></i>
+                    </button>
+                    <button class="btn-sm btn-reject" onclick="openRejectModal('${app.id}')">
+                      <i class="fas fa-times"></i>
+                    </button>
+                  ` : ''}
+                </div>
+              </td>
+            </tr>
+          `;
+        }).join('');
       } catch (error) {
         console.error('Error:', error);
       }
@@ -912,32 +1013,51 @@
       if (!currentApplicationId) return;
       
       const comments = document.getElementById('comments').value;
+      const approveModalBtn = document.querySelector('#reviewModal .btn-modal.btn-approve');
+      const rejectModalBtn = document.querySelector('#reviewModal .btn-modal.btn-reject');
+      const originalApproveHtml = approveModalBtn?.innerHTML;
+      const originalRejectHtml = rejectModalBtn?.innerHTML;
       
       if (action === 'reject' && !comments) {
         alert('Please provide reason for rejection');
         return;
       }
+
+      if (approveModalBtn) approveModalBtn.disabled = true;
+      if (rejectModalBtn) rejectModalBtn.disabled = true;
+      if (approveModalBtn) approveModalBtn.innerHTML = '<i class="fas fa-spinner fa-pulse"></i> Processing...';
+      if (rejectModalBtn) rejectModalBtn.innerHTML = '<i class="fas fa-spinner fa-pulse"></i> Processing...';
       
       if (action === 'approve') {
         const result = await approveFile(currentApplicationId, comments);
         if (result.success) {
-          alert('✅ File approved!');
+          if (approveModalBtn) approveModalBtn.innerHTML = '<i class="fas fa-check"></i> Approved';
         } else {
           alert(`❌ Approve failed: ${result.message || 'Unknown error'}`);
+          if (approveModalBtn) approveModalBtn.innerHTML = originalApproveHtml || '<i class="fas fa-check"></i> Approve & Forward';
+          if (rejectModalBtn) rejectModalBtn.innerHTML = originalRejectHtml || '<i class="fas fa-times"></i> Reject';
+          if (approveModalBtn) approveModalBtn.disabled = false;
+          if (rejectModalBtn) rejectModalBtn.disabled = false;
           return;
         }
       } else {
         const result = await rejectFile(currentApplicationId, comments);
         if (result.success) {
-          alert('❌ File rejected');
+          if (rejectModalBtn) rejectModalBtn.innerHTML = '<i class="fas fa-times"></i> Rejected';
         } else {
           alert(`❌ Reject failed: ${result.message || 'Unknown error'}`);
+          if (approveModalBtn) approveModalBtn.innerHTML = originalApproveHtml || '<i class="fas fa-check"></i> Approve & Forward';
+          if (rejectModalBtn) rejectModalBtn.innerHTML = originalRejectHtml || '<i class="fas fa-times"></i> Reject';
+          if (approveModalBtn) approveModalBtn.disabled = false;
+          if (rejectModalBtn) rejectModalBtn.disabled = false;
           return;
         }
       }
       
-      closeModal();
-      loadApplications();
+      setTimeout(() => {
+        closeModal();
+        loadApplications();
+      }, 700);
     };
 
     await initRoleSwitcher();

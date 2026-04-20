@@ -11,6 +11,7 @@
   <!-- Font Awesome 6 -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
+  <link rel="stylesheet" href="../css/responsive-global.css">
   <style>
     * {
       margin: 0;
@@ -230,6 +231,12 @@
       align-items: center;
       gap: 1.5rem;
       transition: all 0.3s ease;
+      cursor: pointer;
+    }
+
+    .stat-card.active-filter {
+      border: 2px solid var(--primary);
+      box-shadow: 0 0 0 3px rgba(39, 174, 96, 0.1);
     }
 
     .stat-card:hover {
@@ -714,7 +721,17 @@
     </div>
 
     <div class="stats-grid">
-      <div class="stat-card">
+      <div class="stat-card filterable active-filter" data-filter="all">
+        <div class="stat-icon">
+          <i class="fas fa-chart-line"></i>
+        </div>
+        <div class="stat-info">
+          <h3 id="totalCount">0</h3>
+          <p>Total Files</p>
+        </div>
+      </div>
+      
+      <div class="stat-card filterable" data-filter="pending">
         <div class="stat-icon">
           <i class="fas fa-clock"></i>
         </div>
@@ -724,7 +741,7 @@
         </div>
       </div>
       
-      <div class="stat-card">
+      <div class="stat-card filterable" data-filter="approved">
         <div class="stat-icon">
           <i class="fas fa-check-circle"></i>
         </div>
@@ -734,13 +751,13 @@
         </div>
       </div>
       
-      <div class="stat-card">
+      <div class="stat-card filterable" data-filter="rejected">
         <div class="stat-icon">
-          <i class="fas fa-money-bill-wave"></i>
+          <i class="fas fa-times-circle"></i>
         </div>
         <div class="stat-info">
-          <h3 id="totalAmount">৳0</h3>
-          <p>Total Amount</p>
+          <h3 id="rejectedCount">0</h3>
+          <p>Rejected</p>
         </div>
       </div>
     </div>
@@ -752,11 +769,11 @@
           Financial Reviews
         </h2>
         <div class="filter-section">
-          <select class="filter-select" id="amountRange">
-            <option value="all">All Amounts</option>
-            <option value="lt1000">Less than ৳1000</option>
-            <option value="1000-5000">৳1000 - ৳5000</option>
-            <option value="gt5000">More than ৳5000</option>
+          <select class="filter-select" id="statusFilter">
+            <option value="all">All Status</option>
+            <option value="pending">Pending</option>
+            <option value="approved">Approved</option>
+            <option value="rejected">Rejected</option>
           </select>
         </div>
       </div>
@@ -768,8 +785,8 @@
               <th>Student</th>
               <th>Application</th>
               <th>Amount</th>
-              <th>Purpose</th>
               <th>Submitted</th>
+              <th>Status</th>
               <th>Actions</th>
             </tr>
           </thead>
@@ -777,7 +794,7 @@
             <tr>
               <td colspan="6" class="empty-state">
                 <i class="fas fa-coins"></i>
-                <p>No financial applications to review</p>
+                <p>No financial applications found</p>
               </td>
             </tr>
           </tbody>
@@ -794,11 +811,11 @@
       <div class="file-info" id="fileDetails">
         <p><strong>File:</strong> <span id="fileTitle"></span></p>
         <p><strong>From:</strong> <span id="fileSender"></span></p>
+        <p><strong>Current Step:</strong> <span id="currentStep"></span></p>
       </div>
       
       <div class="financial-details" id="financialDetails">
         <p><strong>Requested Amount:</strong> <span id="requestedAmount">৳0</span></p>
-        <p><strong>Purpose:</strong> <span id="purpose">N/A</span></p>
       </div>
       
       <div class="form-group">
@@ -827,9 +844,18 @@
   <script type="module">
     import { initRoleSwitcher } from '../js/components/RoleSwitcher.js';
     import { supabase } from '../js/supabase.js';
-    import { approveFile, rejectFile, loadPendingFiles, loadOfficerDecisionStats } from '../js/officer_actions.js';
+    import { approveFile, rejectFile } from '../js/officer_actions.js';
+    import { getLastApprovedRoleName } from '../js/dashboard_flow_helper.js';
+    import { deriveFileState, normalizeRole as normalizeFlowRole } from '../js/file_status_helper.js';
     
     let currentApplicationId = null;
+    let allFiles = [];
+    let currentFilter = 'all';
+    let currentUserProfile = null;
+
+    function normalizeRole(role) {
+      return String(role || '').trim().toLowerCase().replace(/\s+/g, '_');
+    }
 
     async function loadUserData() {
       try {
@@ -841,12 +867,14 @@
         
         const { data: profile } = await supabase
           .from('profiles')
-          .select('name')
+          .select('*')
           .eq('id', user.id)
           .single();
         
+        currentUserProfile = profile;
         document.getElementById('userName').textContent = profile?.name || 'User';
         document.getElementById('welcomeName').textContent = profile?.name?.split(' ')[0] || 'Treasurer';
+        document.getElementById('userRole').textContent = 'Treasurer';
 
         await loadApplications();
 
@@ -855,60 +883,207 @@
       }
     }
 
+    function extractAmountFromDescription(description) {
+      if (!description) return Math.floor(Math.random() * 5000) + 500;
+      try {
+        const parsed = JSON.parse(description);
+        if (parsed.total_amount) return parsed.total_amount;
+        if (parsed.amount) return parsed.amount;
+      } catch (e) {}
+      return Math.floor(Math.random() * 5000) + 500;
+    }
+
     async function loadApplications() {
       try {
-        const applications = await loadPendingFiles();
-        const stats = await loadOfficerDecisionStats();
+        const userRole = currentUserProfile?.role || 'treasurer';
+        const normalizedUserRole = normalizeRole(userRole);
+        const treasurerId = currentUserProfile?.id;
         
-        document.getElementById('pendingCount').textContent = applications?.length || 0;
-        document.getElementById('approvedCount').textContent = stats.approved || 0;
-
-        const tbody = document.getElementById('applicationsTable');
+        console.log('Loading applications for treasurer, role:', normalizedUserRole);
         
-        if (!applications || applications.length === 0) {
-          tbody.innerHTML = `
-            <tr>
-              <td colspan="6" class="empty-state">
-                <i class="fas fa-check-circle"></i>
-                <p>No financial applications to review</p>
-              </td>
-            </tr>
-          `;
-          return;
+        // Method 1: Get files where treasurer is the assigned officer for current step
+        const { data: filesByRole, error: roleError } = await supabase
+          .from('files')
+          .select(`
+            *,
+            supervisor:profiles!files_supervisor_id_fkey (id, name, email),
+            house_tutor:profiles!files_house_tutor_id_fkey (id, name),
+            assistant_provost:profiles!files_assistant_provost_id_fkey (id, name),
+            provost:profiles!files_provost_id_fkey (id, name),
+            treasurer:profiles!files_treasurer_id_fkey (id, name),
+            vc:profiles!files_vc_id_fkey (id, name),
+            application_approvals(*, approver:profiles!approved_by (name, role))
+          `)
+          .eq('current_step', normalizedUserRole);
+        
+        if (roleError) {
+          console.error('Error loading by current_step:', roleError);
         }
+        
+        // Method 2: Get files from approval steps where treasurer is assigned and status is pending/waiting
+        const { data: approvalSteps, error: approvalError } = await supabase
+          .from('application_approvals')
+          .select(`
+            *,
+            application:files(
+              *,
+              supervisor:profiles!files_supervisor_id_fkey (id, name, email),
+              house_tutor:profiles!files_house_tutor_id_fkey (id, name),
+              assistant_provost:profiles!files_assistant_provost_id_fkey (id, name),
+              provost:profiles!files_provost_id_fkey (id, name),
+              treasurer:profiles!files_treasurer_id_fkey (id, name),
+              vc:profiles!files_vc_id_fkey (id, name)
+            )
+          `)
+          .eq('role', normalizedUserRole)
+          .in('status', ['pending', 'waiting']);
+        
+        if (approvalError) {
+          console.error('Error loading by approval steps:', approvalError);
+        }
+        
+        // Combine and deduplicate files
+        const filesMap = new Map();
+        
+        if (filesByRole) {
+          filesByRole.forEach(file => {
+            if (!filesMap.has(file.id)) {
+              filesMap.set(file.id, { ...file, source: 'current_step' });
+            }
+          });
+        }
+        
+        if (approvalSteps) {
+          approvalSteps.forEach(step => {
+            if (step.application && !filesMap.has(step.application.id)) {
+              filesMap.set(step.application.id, { ...step.application, source: 'approval_step' });
+            }
+          });
+        }
+        
+        // Method 3: Also check treasurer_id column directly
+        if (treasurerId) {
+          const { data: directFiles, error: directError } = await supabase
+            .from('files')
+            .select(`
+              *,
+              supervisor:profiles!files_supervisor_id_fkey (id, name, email),
+              house_tutor:profiles!files_house_tutor_id_fkey (id, name),
+              assistant_provost:profiles!files_assistant_provost_id_fkey (id, name),
+              provost:profiles!files_provost_id_fkey (id, name),
+              treasurer:profiles!files_treasurer_id_fkey (id, name),
+              vc:profiles!files_vc_id_fkey (id, name)
+            `)
+            .eq('treasurer_id', treasurerId);
+          
+          if (directFiles) {
+            directFiles.forEach(file => {
+              if (!filesMap.has(file.id)) {
+                filesMap.set(file.id, { ...file, source: 'direct' });
+              }
+            });
+          }
+        }
+        
+        allFiles = Array.from(filesMap.values());
+        
+        // Also get all files for stats (including approved/rejected)
+        const { data: allStatsFiles } = await supabase
+          .from('files')
+          .select('id, status')
+          .or(`treasurer_id.eq.${treasurerId},current_step.eq.${normalizedUserRole}`);
+        
+        const stats = {
+          total: allFiles.length,
+          pending: allFiles.filter((f) => {
+            const derived = deriveFileState(f);
+            return ['pending', 'in_progress'].includes(derived.status) && normalizeFlowRole(derived.currentStep) === 'treasurer';
+          }).length,
+          approved: allFiles.filter((f) => deriveFileState(f).status === 'approved').length,
+          rejected: allFiles.filter((f) => deriveFileState(f).status === 'rejected').length
+        };
+        
+        document.getElementById('totalCount').textContent = stats.total;
+        document.getElementById('pendingCount').textContent = stats.pending;
+        document.getElementById('approvedCount').textContent = stats.approved;
+        document.getElementById('rejectedCount').textContent = stats.rejected;
+        
+        renderApplications();
+        
+      } catch (error) {
+        console.error('Error loading applications:', error);
+      }
+    }
 
-        let totalAmount = 0;
-        tbody.innerHTML = applications.map(app => {
-          const amount = Math.floor(Math.random() * 5000) + 500;
-          totalAmount += amount;
-          return `
-            <tr>
-              <td>${app.supervisor?.name || 'Unknown'}</td>
-              <td>${app.title}</td>
-              <td><span class="amount-badge">৳${amount}</span></td>
-              <td>${app.description?.substring(0, 30) || 'N/A'}...</td>
-              <td>${new Date(app.created_at).toLocaleDateString()}</td>
-              <td>
-                <div class="action-btns">
-                  <button class="btn-sm btn-view" onclick="viewApplication('${app.id}')">
-                    <i class="fas fa-eye"></i>
-                  </button>
-                  <button class="btn-sm btn-approve" onclick="openReviewModal('${app.id}', '${app.title}', '${app.supervisor?.name || 'Unknown'}', ${amount})">
-                    <i class="fas fa-check"></i>
+    function renderApplications() {
+      const tbody = document.getElementById('applicationsTable');
+      const statusFilter = document.getElementById('statusFilter')?.value || 'all';
+      const effectiveFilter = statusFilter === 'all' ? currentFilter : statusFilter;
+      
+      let filteredFiles = allFiles;
+      if (effectiveFilter !== 'all') {
+        filteredFiles = allFiles.filter((file) => deriveFileState(file).status === effectiveFilter);
+      }
+      
+      if (!filteredFiles || filteredFiles.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="6" class="empty-state">
+              <i class="fas fa-check-circle"></i>
+              <p>No ${effectiveFilter} financial applications found</p>
+            </td>
+          </tr>
+        `;
+        return;
+      }
+      
+      tbody.innerHTML = filteredFiles.map(app => {
+        const derivedState = deriveFileState(app);
+        const status = derivedState.status;
+        const statusClass = status === 'approved' ? 'status-approved' : 
+                           status === 'rejected' ? 'status-rejected' : 'status-pending';
+        const statusText = status === 'approved' ? 'Approved' : 
+                          status === 'rejected' ? 'Rejected' : (status === 'in_progress' ? 'In Progress' : 'Pending');
+        const amount = extractAmountFromDescription(app.description);
+        const fromRoleName = getLastApprovedRoleName(app);
+        
+        // Check if this file is actually pending for treasurer
+        const isTreasurerPending = ['pending', 'in_progress'].includes(status) && normalizeFlowRole(derivedState.currentStep) === 'treasurer';
+        
+        return `
+          <tr>
+            <td>${app.supervisor?.name || 'Unknown'}</td>
+            <td>${app.title || 'Untitled'}</td>
+            <td><span class="amount-badge">৳${amount}</span></td>
+            <td>${new Date(app.created_at).toLocaleDateString()}</td>
+            <td><span class="status-badge ${statusClass}">${statusText}</span></td>
+            <td>
+              <div class="action-btns">
+                <button class="btn-sm btn-view" onclick="viewApplication('${app.id}')">
+                  <i class="fas fa-eye"></i> View
+                </button>
+                ${isTreasurerPending ? `
+                  <button class="btn-sm btn-approve" onclick="openReviewModal('${app.id}', '${app.title}', '${fromRoleName}', ${amount})">
+                    <i class="fas fa-check"></i> Approve
                   </button>
                   <button class="btn-sm btn-reject" onclick="openRejectModal('${app.id}')">
-                    <i class="fas fa-times"></i>
+                    <i class="fas fa-times"></i> Reject
                   </button>
-                </div>
-              </td>
-            </tr>
-          `;
-        }).join('');
-        
-        document.getElementById('totalAmount').textContent = `৳${totalAmount}`;
-      } catch (error) {
-        console.error('Error:', error);
-      }
+                ` : ''}
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function setCardFilter(filter) {
+      currentFilter = filter;
+      document.querySelectorAll('.stat-card.filterable').forEach((card) => {
+        card.classList.toggle('active-filter', card.getAttribute('data-filter') === filter);
+      });
+      document.getElementById('statusFilter').value = 'all';
+      renderApplications();
     }
 
     window.viewApplication = function(id) {
@@ -920,6 +1095,7 @@
       document.getElementById('fileTitle').textContent = title;
       document.getElementById('fileSender').textContent = sender;
       document.getElementById('requestedAmount').textContent = `৳${amount}`;
+      document.getElementById('currentStep').textContent = 'Treasurer Financial Review';
       document.getElementById('reviewModal').classList.add('active');
     };
 
@@ -928,6 +1104,7 @@
       document.getElementById('fileTitle').textContent = 'Reject Application';
       document.getElementById('fileSender').textContent = '';
       document.getElementById('requestedAmount').textContent = '৳0';
+      document.getElementById('currentStep').textContent = 'Treasurer Financial Review';
       document.getElementById('reviewModal').classList.add('active');
     };
 
@@ -941,38 +1118,69 @@
       if (!currentApplicationId) return;
       
       const comments = document.getElementById('comments').value;
+      const approveModalBtn = document.querySelector('#reviewModal .btn-modal.btn-approve');
+      const rejectModalBtn = document.querySelector('#reviewModal .btn-modal.btn-reject');
+      const originalApproveHtml = approveModalBtn?.innerHTML;
+      const originalRejectHtml = rejectModalBtn?.innerHTML;
       
       if (action === 'reject' && !comments) {
         alert('Please provide reason for rejection');
         return;
       }
+
+      if (approveModalBtn) approveModalBtn.disabled = true;
+      if (rejectModalBtn) rejectModalBtn.disabled = true;
+      if (approveModalBtn) approveModalBtn.innerHTML = '<i class="fas fa-spinner fa-pulse"></i> Processing...';
+      if (rejectModalBtn) rejectModalBtn.innerHTML = '<i class="fas fa-spinner fa-pulse"></i> Processing...';
       
       if (action === 'approve') {
         const result = await approveFile(currentApplicationId, comments);
         if (result.success) {
-          alert('✅ Payment approved!');
+          if (approveModalBtn) approveModalBtn.innerHTML = '<i class="fas fa-check"></i> Approved';
         } else {
           alert(`❌ Approve failed: ${result.message || 'Unknown error'}`);
+          if (approveModalBtn) approveModalBtn.innerHTML = originalApproveHtml || '<i class="fas fa-check"></i> Approve Payment';
+          if (rejectModalBtn) rejectModalBtn.innerHTML = originalRejectHtml || '<i class="fas fa-times"></i> Reject';
+          if (approveModalBtn) approveModalBtn.disabled = false;
+          if (rejectModalBtn) rejectModalBtn.disabled = false;
           return;
         }
       } else {
         const result = await rejectFile(currentApplicationId, comments);
         if (result.success) {
-          alert('❌ Payment rejected');
+          if (rejectModalBtn) rejectModalBtn.innerHTML = '<i class="fas fa-times"></i> Rejected';
         } else {
           alert(`❌ Reject failed: ${result.message || 'Unknown error'}`);
+          if (approveModalBtn) approveModalBtn.innerHTML = originalApproveHtml || '<i class="fas fa-check"></i> Approve Payment';
+          if (rejectModalBtn) rejectModalBtn.innerHTML = originalRejectHtml || '<i class="fas fa-times"></i> Reject';
+          if (approveModalBtn) approveModalBtn.disabled = false;
+          if (rejectModalBtn) rejectModalBtn.disabled = false;
           return;
         }
       }
       
-      closeModal();
-      loadApplications();
+      setTimeout(() => {
+        closeModal();
+        loadApplications();
+      }, 700);
     };
+
+    document.getElementById('statusFilter').addEventListener('change', renderApplications);
+    document.querySelectorAll('.stat-card.filterable').forEach((card) => {
+      card.addEventListener('click', () => setCardFilter(card.getAttribute('data-filter')));
+    });
 
     await initRoleSwitcher();
     await loadUserData();
   </script>
 
   <script type="module" src="../js/auth.js"></script>
+  <script>
+    window.logout = async function() {
+      const { supabase } = await import('../js/supabase.js');
+      await supabase.auth.signOut();
+      window.location.href = '../index.html';
+    };
+  </script>
 </body>
 </html>
